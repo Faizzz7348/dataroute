@@ -6,7 +6,7 @@ export type Delivery = {
   lat: number
   lng: number
   color?: string
-  powerMode?: 'on' | 'off' | null
+  powerMode?: 'daily' | 'alt1' | 'alt2' | 'weekday' | 'weekend' | 'notset' | null
   descriptionsObj?: Record<string, string>
 }
 

@@ -128,7 +128,7 @@ export function InfoModal({ visible, onHide, rowData, onSave, isEditMode = false
 
   return (
     <Dialog open={visible} onOpenChange={handleCancel}>
-      <DialogContent className="sm:max-w-[600px] max-h-[80vh]">
+      <DialogContent className="sm:max-w-[600px] max-h-[80vh]" onOpenAutoFocus={(e) => e.preventDefault()}>
         <DialogHeader>
           <DialogTitle>Location Information</DialogTitle>
           <DialogDescription className="text-xs">
@@ -242,14 +242,16 @@ export function InfoModal({ visible, onHide, rowData, onSave, isEditMode = false
               {rowData?.code && !isNaN(Number(rowData.code)) && (
                 <Button
                   onClick={() => handleShortcutClick('familymart')}
-                  className="flex items-center gap-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white border-0"
+                  variant="ghost"
+                  size="icon"
+                  className="h-10 w-10 hover:bg-transparent"
+                  title="FamilyMart"
                 >
                   <img 
                     src="/FamilyMart.png" 
                     alt="FamilyMart" 
-                    className="h-4 w-4"
+                    className="h-8 w-8 hover:scale-110 transition-transform"
                   />
-                  FamilyMart
                 </Button>
               )}
 
@@ -257,12 +259,16 @@ export function InfoModal({ visible, onHide, rowData, onSave, isEditMode = false
               {rowData?.lat && rowData?.lng && (
                 <Button
                   onClick={() => handleShortcutClick('googlemaps')}
-                  className="flex items-center gap-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white border-0"
+                  variant="ghost"
+                  size="icon"
+                  className="h-10 w-10 hover:bg-transparent"
+                  title="Google Maps"
                 >
-                  <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-                  </svg>
-                  Google Maps
+                  <img 
+                    src="/Gmaps.png" 
+                    alt="Google Maps" 
+                    className="h-8 w-8 hover:scale-110 transition-transform"
+                  />
                 </Button>
               )}
 
@@ -270,12 +276,16 @@ export function InfoModal({ visible, onHide, rowData, onSave, isEditMode = false
               {rowData?.lat && rowData?.lng && (
                 <Button
                   onClick={() => handleShortcutClick('waze')}
-                  className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white border-0"
+                  variant="ghost"
+                  size="icon"
+                  className="h-10 w-10 hover:bg-transparent"
+                  title="Waze"
                 >
-                  <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2C8.13 2 5 5.13 5 9c0 1.74.5 3.37 1.41 4.84.95 1.54 2.2 2.86 3.16 4.4.47.75.81 1.45 1.17 2.26C11 21.5 11.21 22 12 22s1-.5 1.26-1.5c.36-.81.7-1.51 1.17-2.26.96-1.54 2.21-2.86 3.16-4.4C18.5 12.37 19 10.74 19 9c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-                  </svg>
-                  Waze
+                  <img 
+                    src="/waze_app_icon-logo_brandlogos.net_l82da.png" 
+                    alt="Waze" 
+                    className="h-8 w-8 hover:scale-110 transition-transform"
+                  />
                 </Button>
               )}
 
@@ -283,12 +293,14 @@ export function InfoModal({ visible, onHide, rowData, onSave, isEditMode = false
               {websiteLink && (
                 <Button
                   onClick={() => handleShortcutClick('website')}
-                  className="flex items-center gap-2 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white border-0"
+                  variant="ghost"
+                  size="icon"
+                  className="h-10 w-10 hover:bg-transparent"
+                  title="Website"
                 >
-                  <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                  <svg className="h-8 w-8 hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7zm5 16H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7z"/>
                   </svg>
-                  Website
                 </Button>
               )}
 
@@ -296,12 +308,16 @@ export function InfoModal({ visible, onHide, rowData, onSave, isEditMode = false
               {qrCodeImageUrl && (
                 <Button
                   onClick={() => handleShortcutClick('qrcode')}
-                  className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white border-0"
+                  variant="ghost"
+                  size="icon"
+                  className="h-10 w-10 hover:bg-transparent"
+                  title="QR Code"
                 >
-                  <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M3 11h8V3H3v8zm2-6h4v4H5V5zM3 21h8v-8H3v8zm2-6h4v4H5v-4zM13 3v8h8V3h-8zm6 6h-4V5h4v4zM13 13h2v2h-2v-2zm2 2h2v2h-2v-2zm-2 2h2v2h-2v-2zm4 0h2v2h-2v-2zm2-2h2v2h-2v-2zm0-4h2v2h-2v-2zm-2 2h2v2h-2v-2z"/>
-                  </svg>
-                  QR Code
+                  <img 
+                    src="/QRcodewoi.png" 
+                    alt="QR Code" 
+                    className="h-8 w-8 hover:scale-110 transition-transform"
+                  />
                 </Button>
               )}
             </div>
@@ -310,7 +326,7 @@ export function InfoModal({ visible, onHide, rowData, onSave, isEditMode = false
           {/* Shortcut Edit Dialogs */}
           {/* FamilyMart Dialog */}
           <Dialog open={showFamilyMartDialog} onOpenChange={setShowFamilyMartDialog}>
-            <DialogContent>
+            <DialogContent onOpenAutoFocus={(e) => e.preventDefault()}>
               <DialogHeader>
                 <DialogTitle>FamilyMart Link</DialogTitle>
               </DialogHeader>

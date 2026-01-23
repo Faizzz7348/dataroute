@@ -79,26 +79,31 @@
   --sidebar-accent-foreground: #0969da;
   --sidebar-border: #d0d7de;
   --sidebar-ring: #0969da;
-  --font-sans: Open Sans, sans-serif;
-  --font-serif: Georgia, serif;
-  --font-mono: Menlo, monospace;
-  --radius: 1.3rem;
-  --shadow-x: 0px;
-  --shadow-y: 2px;
-  --shadow-blur: 0px;
-  --shadow-spread: 0px;
-  --shadow-opacity: 0;
-  --shadow-color: rgba(29,161,242,0.15);
-  --shadow-2xs: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0.00);
-  --shadow-xs: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0.00);
-  --shadow-sm: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0.00), 0px 1px 2px -1px hsl(202.8169 89.1213% 53.1373% / 0.00);
-  --shadow: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0.00), 0px 1px 2px -1px hsl(202.8169 89.1213% 53.1373% / 0.00);
-  --shadow-md: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0.00), 0px 2px 4px -1px hsl(202.8169 89.1213% 53.1373% / 0.00);
-  --shadow-lg: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0.00), 0px 4px 6px -1px hsl(202.8169 89.1213% 53.1373% / 0.00);
-  --shadow-xl: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0.00), 0px 8px 10px -1px hsl(202.8169 89.1213% 53.1373% / 0.00);
-  --shadow-2xl: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0.00);
-  --tracking-normal: 0em;
-  --spacing: 0.25rem;
+}
+
+/* Support for dynamic viewport units and safe areas */
+@supports (height: 100dvh) {
+  :root {
+    --vh: 1dvh;
+  }
+}
+
+@supports not (height: 100dvh) {
+  :root {
+    --vh: 1vh;
+  }
+}
+
+/* Ensure proper height on all zoom levels */
+html, body {
+  height: 100%;
+  min-height: 100%;
+  overflow-x: hidden;
+}
+
+/* Safe area padding for notched devices */
+.pb-safe {
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
 }
 
 .dark {
@@ -143,6 +148,215 @@
   --shadow-blur: 0px;
   --shadow-spread: 0px;
   --shadow-opacity: 0;
+}
+
+/* Theme: Zinc */
+.theme-zinc {
+  --primary: #18181b;
+  --primary-foreground: #fafafa;
+  --secondary: #52525b;
+  --accent: #e4e4e7;
+  --accent-foreground: #18181b;
+  --ring: #18181b;
+}
+
+.dark.theme-zinc {
+  --primary: #fafafa;
+  --primary-foreground: #18181b;
+  --secondary: #a1a1aa;
+  --accent: #27272a;
+  --accent-foreground: #fafafa;
+  --ring: #fafafa;
+}
+
+/* Theme: Slate */
+.theme-slate {
+  --primary: #0f172a;
+  --primary-foreground: #f8fafc;
+  --secondary: #475569;
+  --accent: #e2e8f0;
+  --accent-foreground: #0f172a;
+  --ring: #0f172a;
+}
+
+.dark.theme-slate {
+  --primary: #f8fafc;
+  --primary-foreground: #0f172a;
+  --secondary: #94a3b8;
+  --accent: #1e293b;
+  --accent-foreground: #f8fafc;
+  --ring: #f8fafc;
+}
+
+/* Theme: Stone */
+.theme-stone {
+  --primary: #1c1917;
+  --primary-foreground: #fafaf9;
+  --secondary: #57534e;
+  --accent: #e7e5e4;
+  --accent-foreground: #1c1917;
+  --ring: #1c1917;
+}
+
+.dark.theme-stone {
+  --primary: #fafaf9;
+  --primary-foreground: #1c1917;
+  --secondary: #a8a29e;
+  --accent: #292524;
+  --accent-foreground: #fafaf9;
+  --ring: #fafaf9;
+}
+
+/* Theme: Gray */
+.theme-gray {
+  --primary: #111827;
+  --primary-foreground: #f9fafb;
+  --secondary: #4b5563;
+  --accent: #e5e7eb;
+  --accent-foreground: #111827;
+  --ring: #111827;
+}
+
+.dark.theme-gray {
+  --primary: #f9fafb;
+  --primary-foreground: #111827;
+  --secondary: #9ca3af;
+  --accent: #1f2937;
+  --accent-foreground: #f9fafb;
+  --ring: #f9fafb;
+}
+
+/* Theme: Blue */
+.theme-blue {
+  --primary: #1e40af;
+  --primary-foreground: #eff6ff;
+  --secondary: #3b82f6;
+  --accent: #dbeafe;
+  --accent-foreground: #1e40af;
+  --ring: #3b82f6;
+}
+
+.dark.theme-blue {
+  --primary: #60a5fa;
+  --primary-foreground: #1e3a8a;
+  --secondary: #3b82f6;
+  --accent: #1e3a8a;
+  --accent-foreground: #dbeafe;
+  --ring: #60a5fa;
+}
+
+/* Theme: Green */
+.theme-green {
+  --primary: #15803d;
+  --primary-foreground: #f0fdf4;
+  --secondary: #22c55e;
+  --accent: #dcfce7;
+  --accent-foreground: #15803d;
+  --ring: #22c55e;
+}
+
+.dark.theme-green {
+  --primary: #4ade80;
+  --primary-foreground: #14532d;
+  --secondary: #22c55e;
+  --accent: #14532d;
+  --accent-foreground: #dcfce7;
+  --ring: #4ade80;
+}
+
+/* Theme: Orange */
+.theme-orange {
+  --primary: #c2410c;
+  --primary-foreground: #fff7ed;
+  --secondary: #f97316;
+  --accent: #ffedd5;
+  --accent-foreground: #c2410c;
+  --ring: #f97316;
+}
+
+.dark.theme-orange {
+  --primary: #fb923c;
+  --primary-foreground: #7c2d12;
+  --secondary: #f97316;
+  --accent: #7c2d12;
+  --accent-foreground: #ffedd5;
+  --ring: #fb923c;
+}
+
+/* Theme: Rose */
+.theme-rose {
+  --primary: #be123c;
+  --primary-foreground: #fff1f2;
+  --secondary: #f43f5e;
+  --accent: #ffe4e6;
+  --accent-foreground: #be123c;
+  --ring: #f43f5e;
+}
+
+.dark.theme-rose {
+  --primary: #fb7185;
+  --primary-foreground: #881337;
+  --secondary: #f43f5e;
+  --accent: #881337;
+  --accent-foreground: #ffe4e6;
+  --ring: #fb7185;
+}
+
+/* Theme: Red */
+.theme-red {
+  --primary: #b91c1c;
+  --primary-foreground: #fef2f2;
+  --secondary: #ef4444;
+  --accent: #fee2e2;
+  --accent-foreground: #b91c1c;
+  --ring: #ef4444;
+}
+
+.dark.theme-red {
+  --primary: #f87171;
+  --primary-foreground: #7f1d1d;
+  --secondary: #ef4444;
+  --accent: #7f1d1d;
+  --accent-foreground: #fee2e2;
+  --ring: #f87171;
+}
+
+/* Theme: Yellow */
+.theme-yellow {
+  --primary: #a16207;
+  --primary-foreground: #fefce8;
+  --secondary: #eab308;
+  --accent: #fef9c3;
+  --accent-foreground: #a16207;
+  --ring: #eab308;
+}
+
+.dark.theme-yellow {
+  --primary: #facc15;
+  --primary-foreground: #713f12;
+  --secondary: #eab308;
+  --accent: #713f12;
+  --accent-foreground: #fef9c3;
+  --ring: #facc15;
+}
+
+/* Theme: Violet */
+.theme-violet {
+  --primary: #6d28d9;
+  --primary-foreground: #faf5ff;
+  --secondary: #8b5cf6;
+  --accent: #ede9fe;
+  --accent-foreground: #6d28d9;
+  --ring: #8b5cf6;
+}
+
+.dark.theme-violet {
+  --primary: #a78bfa;
+  --primary-foreground: #4c1d95;
+  --secondary: #8b5cf6;
+  --accent: #4c1d95;
+  --accent-foreground: #ede9fe;
+  --ring: #a78bfa;
   --shadow-color: rgba(29,161,242,0.25);
   --shadow-2xs: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0.00);
   --shadow-xs: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0.00);
@@ -169,6 +383,61 @@
   height: 100%;
   border-radius: 0.5rem;
   z-index: 0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Ensure map container responds to sidebar changes */
+.leaflet-container {
+  transition: width 0.2s ease-in-out, height 0.2s ease-in-out;
+}
+
+/* Smooth tile loading */
+.map-tiles {
+  transition: opacity 0.3s ease-in-out;
+}
+
+/* Smooth zoom transitions */
+.leaflet-zoom-animated {
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Smooth marker animations */
+.leaflet-marker-icon {
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), 
+              opacity 0.3s ease-in-out !important;
+}
+
+.leaflet-marker-icon:hover {
+  transform: scale(1.15) translateY(-5px);
+  filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.3));
+}
+
+/* Smooth popup animations */
+.leaflet-popup {
+  animation: popupFadeIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes popupFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.leaflet-popup-content-wrapper {
+  border-radius: 0.75rem;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 
+              0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease-in-out;
+}
+
+.leaflet-popup-content-wrapper:hover {
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.15), 
+              0 10px 15px -8px rgba(0, 0, 0, 0.15);
 }
 
 .map-popup {
@@ -179,6 +448,7 @@
   font-size: 1rem;
   font-weight: 600;
   margin-bottom: 0.5rem;
+  transition: color 0.2s ease;
 }
 
 .popup-details {
@@ -187,9 +457,84 @@
 
 .popup-item {
   margin: 0.25rem 0;
+  transition: transform 0.2s ease;
+}
+
+.popup-item:hover {
+  transform: translateX(2px);
 }
 
 .popup-item strong {
   font-weight: 500;
   margin-right: 0.25rem;
+}
+
+/* Smooth panning */
+.leaflet-pan-anim .leaflet-tile-container {
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Fade animation for tiles */
+.leaflet-tile {
+  opacity: 0;
+  animation: tileFadeIn 0.3s ease-in-out forwards;
+}
+
+@keyframes tileFadeIn {
+  to {
+    opacity: 1;
+  }
+}
+/* Professional animations and transitions */
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 20px 10px rgba(59, 130, 246, 0);
+  }
+}
+
+/* Smooth scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--primary) / 0.3);
+  border-radius: 10px;
+  transition: background 0.2s;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--primary) / 0.5);
+}
+
+/* Smooth transitions for all interactive elements */
+button, a, input, select, textarea {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }

@@ -50,31 +50,45 @@ function MapResizeHandler() {
 
   useEffect(() => {
     // Force map to recalculate size when component mounts or updates
-    const timer = setTimeout(() => {
-      map.invalidateSize()
-    }, 100)
-
-    // Listen for window resize and sidebar toggle events
-    const handleResize = () => {
-      map.invalidateSize()
+    const resizeMap = () => {
+      setTimeout(() => map.invalidateSize(), 100)
     }
 
-    window.addEventListener('resize', handleResize)
+    // Initial resize
+    resizeMap()
+
+    // Listen for window resize (includes sidebar toggle)
+    window.addEventListener('resize', resizeMap)
     
-    // Also listen for transition end to catch sidebar animations
-    const resizeObserver = new ResizeObserver(() => {
-      map.invalidateSize()
+    // Listen for transition end events to catch sidebar animations
+    const handleTransition = () => {
+      resizeMap()
+    }
+    document.addEventListener('transitionend', handleTransition)
+
+    // Observe DOM changes that might affect layout
+    const observer = new MutationObserver(() => {
+      resizeMap()
     })
     
-    const container = map.getContainer().parentElement
-    if (container) {
-      resizeObserver.observe(container)
+    // Observe the main container for class changes
+    const mainElement = document.querySelector('main')
+    if (mainElement) {
+      observer.observe(mainElement, {
+        attributes: true,
+        attributeFilter: ['class', 'style'],
+        subtree: true
+      })
     }
 
+    // Periodic resize check as fallback
+    const interval = setInterval(resizeMap, 500)
+
     return () => {
-      clearTimeout(timer)
-      window.removeEventListener('resize', handleResize)
-      resizeObserver.disconnect()
+      window.removeEventListener('resize', resizeMap)
+      document.removeEventListener('transitionend', handleTransition)
+      observer.disconnect()
+      clearInterval(interval)
     }
   }, [map])
 

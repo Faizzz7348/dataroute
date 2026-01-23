@@ -54,6 +54,7 @@ export default function SL1Page() {
   const [showMap, setShowMap] = useState(false)
   const [editModalOpen, setEditModalOpen] = useState(false)
   const [editingRow, setEditingRow] = useState<Delivery | null>(null)
+  const [codeError, setCodeError] = useState<string>('')
   const [deliveryData, setDeliveryData] = useState<Delivery[]>(
     [...sl1Deliveries].sort((a, b) => a.code - b.code)
   )
@@ -78,11 +79,17 @@ export default function SL1Page() {
     }
   }
 
+  // Function to check for duplicate code
+  const checkDuplicateCode = (code: number, currentId: number): boolean => {
+    return deliveryData.some(del => del.code === code && del.id !== currentId)
+  }
+
   // Function to handle edit row - receives the row id
   const handleEditRow = (rowId: number) => {
     const row = deliveryData.find((del) => del.id === rowId)
     if (row) {
       setEditingRow({ ...row })
+      setCodeError('')
       setEditModalOpen(true)
     }
   }
@@ -90,6 +97,12 @@ export default function SL1Page() {
   // Function to save edited row
   const handleSaveRow = () => {
     if (editingRow) {
+      // Check for duplicate code
+      if (checkDuplicateCode(editingRow.code, editingRow.id)) {
+        setCodeError(`Code ${editingRow.code} already exists. Please use a unique code.`)
+        return
+      }
+      
       setDeliveryData((prev) =>
         prev.map((del) =>
           del.id === editingRow.id ? editingRow : del
@@ -97,6 +110,7 @@ export default function SL1Page() {
       )
       setEditModalOpen(false)
       setEditingRow(null)
+      setCodeError('')
     }
   }
 
@@ -160,11 +174,25 @@ export default function SL1Page() {
                 )}
               </Button>
             </div>
-            {showMap && (
-              <div style={{ height: "500px" }}>
-                <MapComponent locations={mapLocations} selectedLocation={selectedLocation} />
+            <div 
+              className={`overflow-hidden transition-all duration-700 ease-in-out ${
+                showMap ? 'max-h-[500px] opacity-100 scale-100' : 'max-h-0 opacity-0 scale-95'
+              }`}
+              style={{ 
+                transformOrigin: 'top center',
+              }}
+            >
+              <div 
+                style={{ height: "500px" }}
+                className={`transition-transform duration-700 ease-out ${
+                  showMap ? 'scale-100' : 'scale-90'
+                }`}
+              >
+                {showMap && (
+                  <MapComponent locations={mapLocations} selectedLocation={selectedLocation} />
+                )}
               </div>
-            )}
+            </div>
           </div>
 
           {/* Data Table Section - Full Width */}
@@ -183,7 +211,7 @@ export default function SL1Page() {
 
         {/* Edit Row Modal */}
         <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
-          <DialogContent className="sm:max-w-[500px]">
+          <DialogContent className="sm:max-w-[500px]" onOpenAutoFocus={(e) => e.preventDefault()}>
             <DialogHeader>
               <DialogTitle>Edit Delivery Row</DialogTitle>
               <DialogDescription>
@@ -193,16 +221,34 @@ export default function SL1Page() {
             {editingRow && (
               <div className="grid gap-4 py-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="code">Code</Label>
+                  <Label htmlFor="code" className={codeError ? 'text-destructive' : ''}>Code</Label>
                   <Input
                     id="code"
                     type="number"
                     value={editingRow.code}
-                    onChange={(e) =>
-                      setEditingRow({ ...editingRow, code: parseInt(e.target.value) || 0 })
-                    }
+                    onChange={(e) => {
+                      const newCode = parseInt(e.target.value) || 0
+                      setEditingRow({ ...editingRow, code: newCode })
+                      // Check for duplicate as user types
+                      if (checkDuplicateCode(newCode, editingRow.id)) {
+                        setCodeError(`Code ${newCode} already exists. Please use a unique code.`)
+                      } else {
+                        setCodeError('')
+                      }
+                    }}
                     placeholder="Enter code"
+                    className={codeError ? 'border-destructive focus-visible:ring-destructive' : ''}
                   />
+                  {codeError && (
+                    <p className="text-sm text-destructive font-medium flex items-center gap-1">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="8" x2="12" y2="12"/>
+                        <line x1="12" y1="16" x2="12.01" y2="16"/>
+                      </svg>
+                      {codeError}
+                    </p>
+                  )}
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="location-name">Location Name</Label>
@@ -300,7 +346,13 @@ export default function SL1Page() {
               <Button variant="outline" onClick={() => setEditModalOpen(false)}>
                 Cancel
               </Button>
-              <Button onClick={handleSaveRow}>Save Changes</Button>
+              <Button 
+                onClick={handleSaveRow}
+                disabled={!!codeError}
+                className={codeError ? 'opacity-50 cursor-not-allowed' : ''}
+              >
+                Save Changes
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

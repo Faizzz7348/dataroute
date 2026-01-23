@@ -47,6 +47,73 @@ import { Input } from "@/components/ui/input"
 import { Delivery } from "@/app/data"
 import { PowerModeModal } from "@/components/power-mode-modal"
 import { InfoModal } from "@/components/info-modal"
+import { useEditMode } from "@/contexts/edit-mode-context"
+
+// Helper functions untuk check power mode status
+const isEvenDate = () => {
+  const today = new Date().getDate()
+  return today % 2 === 0
+}
+
+const isOddDate = () => {
+  const today = new Date().getDate()
+  return today % 2 !== 0
+}
+
+const isWeekday = () => {
+  const day = new Date().getDay() // 0=Sunday, 6=Saturday
+  return day >= 0 && day <= 4 // Sunday to Thursday
+}
+
+const isWeekend = () => {
+  const day = new Date().getDay()
+  return day >= 1 && day <= 5 // Monday to Friday
+}
+
+const isPowerModeActive = (mode: string | null | undefined): boolean => {
+  if (!mode || mode === 'notset') return false
+  
+  switch(mode) {
+    case 'daily':
+      return true
+    case 'alt1':
+      return isEvenDate()
+    case 'alt2':
+      return isOddDate()
+    case 'weekday':
+      return isWeekday()
+    case 'weekend':
+      return isWeekend()
+    default:
+      return false
+  }
+}
+
+const getPowerIconColor = (mode: string | null | undefined): { bg: string; text: string; title: string } => {
+  if (!mode || mode === 'notset') {
+    return { 
+      bg: 'rgba(148, 163, 184, 0.1)', 
+      text: '#94a3b8',
+      title: 'Not Set'
+    }
+  }
+  
+  const isActive = isPowerModeActive(mode)
+  
+  if (isActive) {
+    return { 
+      bg: 'rgba(34, 197, 94, 0.1)', 
+      text: '#22c55e',
+      title: 'Power ON'
+    }
+  } else {
+    return { 
+      bg: 'rgba(239, 68, 68, 0.1)', 
+      text: '#ef4444',
+      title: 'Power OFF'
+    }
+  }
+}
 
 interface DataTableProps {
   data: Delivery[]
@@ -58,6 +125,7 @@ interface DataTableProps {
 export function DataTable({ data, onLocationClick, onEditRow, showMap = true }: DataTableProps) {
   'use no memo'
   
+  const { isEditMode } = useEditMode()
   const [tableData, setTableData] = React.useState<Delivery[]>(data)
   const [columnDialogOpen, setColumnDialogOpen] = React.useState(false)
   const [rowDialogOpen, setRowDialogOpen] = React.useState(false)
@@ -77,8 +145,33 @@ export function DataTable({ data, onLocationClick, onEditRow, showMap = true }: 
   ])
 
   React.useEffect(() => {
-    setTableData(data)
-    setRowCount(data.length)
+    // Sort data berdasarkan power mode status, kemudian by code
+    const sortedData = [...data].sort((a, b) => {
+      const aMode = a.powerMode
+      const bMode = b.powerMode
+      
+      // Calculate priority untuk setiap row
+      const getPriority = (mode: string | null | undefined): number => {
+        if (!mode || mode === 'notset') return 1 // Not set = middle (priority 1)
+        
+        const isActive = isPowerModeActive(mode)
+        return isActive ? 2 : 0 // Active = top (priority 2), Inactive = bottom (priority 0)
+      }
+      
+      const aPriority = getPriority(aMode)
+      const bPriority = getPriority(bMode)
+      
+      // Sort descending by priority (higher priority first)
+      if (bPriority !== aPriority) {
+        return bPriority - aPriority
+      }
+      
+      // Jika priority sama, sort by code ascending
+      return a.code - b.code
+    })
+    
+    setTableData(sortedData)
+    setRowCount(sortedData.length)
   }, [data])
 
   const toggleColumnVisibility = (columnId: string) => {
@@ -202,7 +295,11 @@ export function DataTable({ data, onLocationClick, onEditRow, showMap = true }: 
             
             return (
               <div 
-                className={`text-center p-2 rounded ${showMap ? 'cursor-pointer hover:text-primary hover:underline' : ''} transition-colors`}
+                className={`text-center p-2 rounded-md transition-all duration-200 ${
+                  showMap 
+                    ? 'cursor-pointer hover:bg-primary/10 hover:text-primary hover:font-medium hover:shadow-sm' 
+                    : ''
+                }`}
                 onClick={() => {
                   if (showMap) {
                     onLocationClick?.(locationName)
@@ -232,42 +329,50 @@ export function DataTable({ data, onLocationClick, onEditRow, showMap = true }: 
     {
       id: "actions",
       enableHiding: false,
-      header: () => <div className="text-center">Action</div>,
+      header: () => <div className="text-center">Actions</div>,
       cell: ({ row, table }) => {
         const delivery = row.original
         const onEditRow = (table.options.meta as any)?.onEditRow
+        const powerColor = getPowerIconColor(delivery.powerMode)
+        const isActive = isPowerModeActive(delivery.powerMode)
 
         return (
-          <div className="flex justify-center gap-2">
-            <button
-              onClick={() => onEditRow?.(delivery.id)}
-              className="p-1 hover:text-primary transition-colors"
-              title="Edit Row"
-            >
-              <Edit className="h-4 w-4" />
-            </button>
+          <div className="flex justify-center gap-1.5">
+            {isEditMode && (
+              <button
+                onClick={() => onEditRow?.(delivery.id)}
+                className="p-2 rounded-lg hover:bg-primary/10 hover:text-primary transition-all duration-200 group"
+                title="Edit Row"
+              >
+                <Edit className="h-4 w-4 group-hover:scale-110 transition-transform" />
+              </button>
+            )}
             <button
               onClick={() => {
                 setSelectedInfoRow(delivery)
                 setInfoModalOpen(true)
               }}
-              className="p-1 hover:text-primary transition-colors"
+              className="p-2 rounded-lg hover:bg-blue-500/10 hover:text-blue-600 transition-all duration-200 group"
               title="Info"
             >
-              <Info className="h-4 w-4" />
+              <Info className="h-4 w-4 group-hover:scale-110 transition-transform" />
             </button>
             <button
               onClick={() => {
-                setSelectedPowerRow(delivery)
-                setPowerModalOpen(true)
+                if (isEditMode) {
+                  setSelectedPowerRow(delivery)
+                  setPowerModalOpen(true)
+                }
               }}
-              className="p-1 transition-colors"
-              title={delivery.powerMode === 'on' ? 'Power ON' : delivery.powerMode === 'off' ? 'Power OFF' : 'Power Mode'}
+              className={`p-2 rounded-lg transition-all duration-200 group ${
+                isEditMode ? 'hover:shadow-md cursor-pointer' : 'cursor-default'
+              }`}
+              title={powerColor.title}
               style={{
-                color: delivery.powerMode === 'on' ? '#22c55e' : delivery.powerMode === 'off' ? '#ef4444' : '#94a3b8'
+                color: powerColor.text
               }}
             >
-              <Power className="h-4 w-4" />
+              <Power className={`h-4 w-4 ${isEditMode ? 'group-hover:scale-110' : ''} transition-transform ${!isActive && delivery.powerMode && delivery.powerMode !== 'notset' ? 'animate-pulse' : ''}`} />
             </button>
           </div>
         )
@@ -291,11 +396,11 @@ export function DataTable({ data, onLocationClick, onEditRow, showMap = true }: 
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
-    enableSorting: true,
+    enableSorting: false,
+    manualSorting: true,
     state: {
       sorting,
       columnFilters,
@@ -311,45 +416,63 @@ export function DataTable({ data, onLocationClick, onEditRow, showMap = true }: 
 
   return (
     <div className="w-full">
-      <div className="flex items-center justify-end py-4">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline">
-              <Settings className="mr-2 h-4 w-4" />
-              Settings
-              <ChevronDown className="ml-2 h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuCheckboxItem
-              onSelect={() => setColumnDialogOpen(true)}
-              className="text-center justify-center cursor-pointer"
-            >
-              Column Settings
-            </DropdownMenuCheckboxItem>
-            <DropdownMenuCheckboxItem
-              onSelect={() => openRowDialog()}
-              className="text-center justify-center cursor-pointer"
-            >
-              Row Settings
-            </DropdownMenuCheckboxItem>
-            <DropdownMenuCheckboxItem
-              onSelect={() => setAddRowDialogOpen(true)}
-              className="text-center justify-center cursor-pointer"
-            >
-              Add New Row
-            </DropdownMenuCheckboxItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+      <div className="flex items-center justify-between py-6">
+        <div className="flex items-center gap-3 px-4 py-3 rounded-lg border bg-card shadow-md hover:shadow-lg transition-all duration-200">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-sm">
+              <svg className="h-5 w-5 text-primary-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+            </div>
+            <div>
+              <h2 className="text-base font-bold text-foreground flex items-center gap-2">
+                Data Management
+                <span className="px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary rounded-full">Active</span>
+              </h2>
+              <p className="text-xs text-muted-foreground font-medium">Configure your table settings</p>
+            </div>
+          </div>
+        </div>
+        {isEditMode && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="shadow-sm hover:shadow-md transition-all duration-200">
+                <Settings className="mr-2 h-4 w-4" />
+                Settings
+                <ChevronDown className="ml-2 h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuCheckboxItem
+                onSelect={() => setColumnDialogOpen(true)}
+                className="text-center justify-center cursor-pointer"
+              >
+                Column Settings
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                onSelect={() => openRowDialog()}
+                className="text-center justify-center cursor-pointer"
+              >
+                Row Settings
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                onSelect={() => setAddRowDialogOpen(true)}
+                className="text-center justify-center cursor-pointer"
+              >
+                Add New Row
+              </DropdownMenuCheckboxItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </div>
-      <div className="rounded-md border">
+      <div className="rounded-lg border shadow-sm bg-card overflow-hidden transition-all duration-200 hover:shadow-md">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
+              <TableRow key={headerGroup.id} className="bg-muted/50 border-b-2 border-primary/10">
                 {headerGroup.headers.map((header) => {
                   return (
-                    <TableHead key={header.id} className="text-center">
+                    <TableHead key={header.id} className="text-center font-semibold text-foreground">
                       {header.isPlaceholder
                         ? null
                         : flexRender(
@@ -364,21 +487,32 @@ export function DataTable({ data, onLocationClick, onEditRow, showMap = true }: 
           </TableHeader>
           <TableBody className="text-xs">
             {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row, rowIndex) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="text-center">
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        { ...cell.getContext(), rowIndex }
-                      )}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
+              table.getRowModel().rows.map((row, rowIndex) => {
+                const delivery = row.original
+                const isActive = isPowerModeActive(delivery.powerMode)
+                const hasMode = delivery.powerMode && delivery.powerMode !== 'notset'
+                
+                return (
+                  <TableRow
+                    key={row.id}
+                    data-state={row.getIsSelected() && "selected"}
+                    className={`transition-all duration-300 ${
+                      hasMode && !isActive 
+                        ? 'opacity-40 bg-muted/20 hover:bg-muted/30' 
+                        : 'hover:bg-muted/30'
+                    }`}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id} className="text-center">
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          { ...cell.getContext(), rowIndex }
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                )
+              })
             ) : (
               <TableRow>
                 <TableCell
@@ -392,24 +526,31 @@ export function DataTable({ data, onLocationClick, onEditRow, showMap = true }: 
           </TableBody>
         </Table>
       </div>
-      <div className="flex items-center justify-end space-x-2 py-4">
-        <div className="flex-1 text-sm text-muted-foreground">
-          {table.getFilteredRowModel().rows.length} row(s) total.
+      <div className="flex items-center justify-between py-6 px-2">
+        <div className="flex items-center gap-2">
+          <div className="px-3 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium">
+            {table.getFilteredRowModel().rows.length} Records
+          </div>
         </div>
-        <div className="space-x-2">
+        <div className="flex items-center gap-2">
           <Button
             variant="outline"
             size="sm"
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
+            className="shadow-sm hover:shadow-md transition-all duration-200"
           >
             Previous
           </Button>
+          <div className="px-3 py-1 text-sm text-muted-foreground font-medium">
+            Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
+          </div>
           <Button
             variant="outline"
             size="sm"
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
+            className="shadow-sm hover:shadow-md transition-all duration-200"
           >
             Next
           </Button>
@@ -418,7 +559,7 @@ export function DataTable({ data, onLocationClick, onEditRow, showMap = true }: 
 
       {/* Column Settings Dialog */}
       <Dialog open={columnDialogOpen} onOpenChange={setColumnDialogOpen}>
-        <DialogContent>
+        <DialogContent onOpenAutoFocus={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle>Column Settings</DialogTitle>
             <DialogDescription>
@@ -434,7 +575,7 @@ export function DataTable({ data, onLocationClick, onEditRow, showMap = true }: 
                     checked={col.visible}
                     onCheckedChange={() => toggleColumnVisibility(col.id)}
                   />
-                  <Label htmlFor={col.id} className="cursor-pointer font-normal text-xs">
+                  <Label htmlFor={col.id} className="cursor-pointer font-normal text-sm">
                     {col.label}
                   </Label>
                 </div>
@@ -469,7 +610,7 @@ export function DataTable({ data, onLocationClick, onEditRow, showMap = true }: 
 
       {/* Add New Row Dialog */}
       <Dialog open={addRowDialogOpen} onOpenChange={setAddRowDialogOpen}>
-        <DialogContent>
+        <DialogContent onOpenAutoFocus={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle>Add New Row</DialogTitle>
             <DialogDescription>
@@ -525,7 +666,7 @@ export function DataTable({ data, onLocationClick, onEditRow, showMap = true }: 
 
       {/* Row Settings Dialog */}
       <Dialog open={rowDialogOpen} onOpenChange={setRowDialogOpen}>
-        <DialogContent className="max-w-6xl max-h-[80vh]">
+        <DialogContent className="max-w-7xl max-h-[70vh]" onOpenAutoFocus={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle>Row Settings</DialogTitle>
             <DialogDescription>
@@ -539,7 +680,7 @@ export function DataTable({ data, onLocationClick, onEditRow, showMap = true }: 
               <p className="text-xs text-muted-foreground">
                 Enter order number (1-{tempRowData.length}) to reorder rows. Changes will apply after clicking Apply button.
               </p>
-              <div className="max-h-[400px] overflow-auto rounded-md border">
+              <div className="max-h-[300px] overflow-auto rounded-md border">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -627,10 +768,33 @@ export function DataTable({ data, onLocationClick, onEditRow, showMap = true }: 
         rowData={selectedPowerRow}
         onSave={(newMode) => {
           if (selectedPowerRow) {
+            // Update data dengan power mode baru
             const updatedData = tableData.map((row) =>
-              row.id === selectedPowerRow.id ? { ...row, powerMode: newMode as 'on' | 'off' | null } : row
+              row.id === selectedPowerRow.id 
+                ? { ...row, powerMode: newMode as 'daily' | 'alt1' | 'alt2' | 'weekday' | 'weekend' | 'notset' | null } 
+                : row
             )
-            setTableData(updatedData)
+            
+            // Sort semula berdasarkan priority, kemudian by code
+            const sortedData = [...updatedData].sort((a, b) => {
+              const getPriority = (mode: string | null | undefined): number => {
+                if (!mode || mode === 'notset') return 1 // Not set = middle
+                const isActive = isPowerModeActive(mode)
+                return isActive ? 2 : 0 // Active = top, Inactive = bottom
+              }
+              
+              const aPriority = getPriority(a.powerMode)
+              const bPriority = getPriority(b.powerMode)
+              
+              // Jika priority sama, sort by code ascending
+              if (aPriority === bPriority) {
+                return a.code - b.code
+              }
+              
+              return bPriority - aPriority
+            })
+            
+            setTableData(sortedData)
           }
         }}
       />
