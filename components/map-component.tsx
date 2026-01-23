@@ -35,8 +35,8 @@ function FlyToLocation({ location }: { location: Location | null }) {
   useEffect(() => {
     if (location) {
       map.flyTo([location.lat, location.lng], 13, {
-        duration: 2,
-        easeLinearity: 0.25,
+        duration: 3.5,
+        easeLinearity: 0.15,
         animate: true,
       })
     }

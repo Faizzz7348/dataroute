@@ -20,6 +20,7 @@ import { ChevronDown, ChevronUp, Info, Power, Minus, Plus, Settings, Edit } from
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
+  DropdownMenuItem,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuTrigger,
@@ -433,46 +434,47 @@ export function DataTable({ data, onLocationClick, onEditRow, showMap = true }: 
             </div>
           </div>
         </div>
-        {isEditMode && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="shadow-sm hover:shadow-md transition-all duration-200">
-                <Settings className="mr-2 h-4 w-4" />
-                Settings
-                <ChevronDown className="ml-2 h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuCheckboxItem
-                onSelect={() => setColumnDialogOpen(true)}
-                className="text-center justify-center cursor-pointer"
-              >
-                Column Settings
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem
-                onSelect={() => openRowDialog()}
-                className="text-center justify-center cursor-pointer"
-              >
-                Row Settings
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem
-                onSelect={() => setAddRowDialogOpen(true)}
-                className="text-center justify-center cursor-pointer"
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="shadow-sm hover:shadow-md transition-all duration-200">
+              <Settings className="mr-2 h-4 w-4" />
+              Settings
+              <ChevronDown className="ml-2 h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem
+              onClick={() => setColumnDialogOpen(true)}
+              className="cursor-pointer"
+            >
+              Column Settings
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => openRowDialog()}
+              className="cursor-pointer"
+            >
+              Row Settings
+            </DropdownMenuItem>
+            {isEditMode && (
+              <DropdownMenuItem
+                onClick={() => setAddRowDialogOpen(true)}
+                className="cursor-pointer"
               >
                 Add New Row
-              </DropdownMenuCheckboxItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
+              </DropdownMenuItem>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
       <div className="rounded-lg border shadow-sm bg-card overflow-hidden transition-all duration-200 hover:shadow-md">
+        <div className="overflow-auto max-h-[600px]">
         <Table>
-          <TableHeader>
+          <TableHeader className="sticky top-0 bg-muted/50 z-10">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id} className="bg-muted/50 border-b-2 border-primary/10">
                 {headerGroup.headers.map((header) => {
                   return (
-                    <TableHead key={header.id} className="text-center font-semibold text-foreground">
+                    <TableHead key={header.id} className="text-center font-semibold text-foreground bg-muted/50">
                       {header.isPlaceholder
                         ? null
                         : flexRender(
@@ -555,6 +557,7 @@ export function DataTable({ data, onLocationClick, onEditRow, showMap = true }: 
             Next
           </Button>
         </div>
+        </div>
       </div>
 
       {/* Column Settings Dialog */}
@@ -585,6 +588,7 @@ export function DataTable({ data, onLocationClick, onEditRow, showMap = true }: 
                     size="sm"
                     onClick={() => moveColumn(index, 'up')}
                     disabled={index === 0}
+                    className={index !== 0 ? 'text-green-700 dark:text-green-600 hover:text-green-800 dark:hover:text-green-500' : ''}
                   >
                     <ChevronUp className="h-4 w-4" />
                   </Button>
@@ -593,6 +597,7 @@ export function DataTable({ data, onLocationClick, onEditRow, showMap = true }: 
                     size="sm"
                     onClick={() => moveColumn(index, 'down')}
                     disabled={index === columnSettings.length - 1}
+                    className={index !== columnSettings.length - 1 ? 'text-green-700 dark:text-green-600 hover:text-green-800 dark:hover:text-green-500' : ''}
                   >
                     <ChevronDown className="h-4 w-4" />
                   </Button>
@@ -680,20 +685,21 @@ export function DataTable({ data, onLocationClick, onEditRow, showMap = true }: 
               <p className="text-xs text-muted-foreground">
                 Enter order number (1-{tempRowData.length}) to reorder rows. Changes will apply after clicking Apply button.
               </p>
-              <div className="max-h-[300px] overflow-auto rounded-md border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="text-center w-[120px] text-xs">Order</TableHead>
-                      <TableHead className="text-center w-[150px] text-xs">Code</TableHead>
-                      <TableHead className="text-center w-[300px] text-xs">Location</TableHead>
-                      <TableHead className="text-center w-[250px] text-xs">Delivery</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
+              <div className="rounded-md border">
+                <div className="max-h-[300px] overflow-y-auto overflow-x-auto">
+                  <table className="w-full caption-bottom text-sm">
+                    <thead className="[&_tr]:border-b sticky top-0 z-50 bg-muted shadow-sm">
+                      <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted bg-muted">
+                        <th className="h-10 px-2 text-center align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] w-[120px] text-xs bg-muted">Order</th>
+                        <th className="h-10 px-2 text-center align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] w-[150px] text-xs bg-muted">Code</th>
+                        <th className="h-10 px-2 text-center align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] w-[300px] text-xs bg-muted">Location</th>
+                        <th className="h-10 px-2 text-center align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] w-[250px] text-xs bg-muted">Delivery</th>
+                      </tr>
+                    </thead>
+                    <tbody className="[&_tr:last-child]:border-0">
                     {tempRowData.map((row, index) => (
-                      <TableRow key={row.id}>
-                        <TableCell className="text-center w-[120px]">
+                      <tr key={row.id} className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+                        <td className="p-2 align-middle [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] text-center w-[120px]">
                           <Input
                             type="number"
                             value={orderInputs[index] || ''}
@@ -704,14 +710,15 @@ export function DataTable({ data, onLocationClick, onEditRow, showMap = true }: 
                             min={1}
                             max={tempRowData.length}
                           />
-                        </TableCell>
-                        <TableCell className="text-center text-xs w-[150px]">{row.code}</TableCell>
-                        <TableCell className="text-center text-xs w-[300px]">{row.location}</TableCell>
-                        <TableCell className="text-center text-xs w-[250px]">{row.delivery}</TableCell>
-                      </TableRow>
+                        </td>
+                        <td className="p-2 align-middle [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] text-center text-xs w-[150px]">{row.code}</td>
+                        <td className="p-2 align-middle [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] text-center text-xs w-[300px]">{row.location}</td>
+                        <td className="p-2 align-middle [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] text-center text-xs w-[250px]">{row.delivery}</td>
+                      </tr>
                     ))}
-                  </TableBody>
-                </Table>
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
 

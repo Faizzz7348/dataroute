@@ -65,11 +65,11 @@ export function PowerModeModal({ visible, onHide, rowData, onSave }: PowerModeMo
   const [tempSelectedMode, setTempSelectedMode] = React.useState(rowData?.powerMode || null)
 
   const powerModes = [
-    { value: 'daily', label: 'Daily', icon: '📅', description: 'Hari hari on ada delivery' },
-    { value: 'alt1', label: 'Alt 1', icon: '2️⃣', description: 'Ikut tarikh genap sahaja ada delivery' },
-    { value: 'alt2', label: 'Alt 2', icon: '1️⃣', description: 'Ikut tarikh ganjil sahaja ada delivery' },
-    { value: 'weekday', label: 'Weekday', icon: '📆', description: 'On pada hari Ahad hingga Khamis' },
-    { value: 'weekend', label: 'Weekend', icon: '🗓️', description: 'On pada hari Isnin hingga Jumaat' },
+    { value: 'daily', label: 'Daily', icon: '📅', description: 'Delivery available every day' },
+    { value: 'alt1', label: 'Alt 1', icon: '2️⃣', description: 'Delivery available on even dates only' },
+    { value: 'alt2', label: 'Alt 2', icon: '1️⃣', description: 'Delivery available on odd dates only' },
+    { value: 'weekday', label: 'Weekday', icon: '📆', description: 'On from Sunday to Thursday' },
+    { value: 'weekend', label: 'Weekend', icon: '🗓️', description: 'On from Monday to Friday' },
     { value: 'notset', label: 'Not Set', icon: '❓', description: 'None' },
   ]
 

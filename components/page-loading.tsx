@@ -2,10 +2,10 @@
 
 import * as React from "react"
 import { Loader2 } from "lucide-react"
-import { useEditMode } from "@/contexts/edit-mode-context"
+import { usePageLoading } from "@/contexts/page-loading-context"
 
-export function EditModeLoading() {
-  const { isLoading, isEditMode } = useEditMode()
+export function PageLoading() {
+  const { isLoading, loadingMessage } = usePageLoading()
   const [dots, setDots] = React.useState("")
 
   React.useEffect(() => {
@@ -26,7 +26,7 @@ export function EditModeLoading() {
       <div className="relative z-10 flex flex-col items-center gap-3">
         <Loader2 className="h-12 w-12 text-primary animate-spin" />
         <p className="text-sm font-medium text-muted-foreground animate-pulse">
-          {isEditMode ? "Edit Mode turning on" : "Edit Mode turning off"}{dots}
+          {loadingMessage}{dots}
         </p>
       </div>
     </div>

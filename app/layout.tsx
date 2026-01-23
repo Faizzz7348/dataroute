@@ -3,7 +3,9 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { EditModeProvider } from "@/contexts/edit-mode-context";
+import { PageLoadingProvider } from "@/contexts/page-loading-context";
 import { EditModeLoading } from "@/components/edit-mode-loading";
+import { PageLoading } from "@/components/page-loading";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -37,10 +39,13 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <EditModeProvider>
-            {children}
-            <EditModeLoading />
-          </EditModeProvider>
+          <PageLoadingProvider>
+            <EditModeProvider>
+              {children}
+              <EditModeLoading />
+              <PageLoading />
+            </EditModeProvider>
+          </PageLoadingProvider>
         </ThemeProvider>
       </body>
     </html>

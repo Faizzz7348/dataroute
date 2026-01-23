@@ -1,5 +1,9 @@
+"use client"
+
+import { useEffect, useState } from "react"
 import { AppSidebar } from "@/components/app-sidebar"
 import { ModeToggle } from "@/components/mode-toggle"
+import { usePageLoading } from "@/contexts/page-loading-context"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -16,6 +20,16 @@ import {
 } from "@/components/ui/sidebar"
 
 export default function Home() {
+  const { showPageLoading } = usePageLoading()
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    showPageLoading("Welcome to Homepage", 800)
+    setTimeout(() => setMounted(true), 800)
+  }, [showPageLoading])
+
+  if (!mounted) return null
+
   return (
     <SidebarProvider>
       <AppSidebar />

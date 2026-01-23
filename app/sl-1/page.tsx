@@ -1,8 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { AppSidebar } from "@/components/app-sidebar"
 import { ModeToggle } from "@/components/mode-toggle"
+import { usePageLoading } from "@/contexts/page-loading-context"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -50,6 +51,8 @@ const MapComponent = dynamic(
 const sl1Deliveries: Delivery[] = []
 
 export default function SL1Page() {
+  const { showPageLoading } = usePageLoading()
+  const [mounted, setMounted] = useState(false)
   const [selectedLocation, setSelectedLocation] = useState<typeof locations[0] | null>(null)
   const [showMap, setShowMap] = useState(false)
   const [editModalOpen, setEditModalOpen] = useState(false)
@@ -58,6 +61,11 @@ export default function SL1Page() {
   const [deliveryData, setDeliveryData] = useState<Delivery[]>(
     [...sl1Deliveries].sort((a, b) => a.code - b.code)
   )
+
+  useEffect(() => {
+    showPageLoading("Opening Route SL-1", 800)
+    setTimeout(() => setMounted(true), 800)
+  }, [showPageLoading])
 
   // Function to find location by name and fly to it
   const handleLocationClick = (locationName: string) => {
@@ -124,6 +132,8 @@ export default function SL1Page() {
     delivery: del.delivery,
     color: del.color
   }))
+
+  if (!mounted) return null
 
   return (
     <SidebarProvider>

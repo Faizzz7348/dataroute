@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Delivery } from "@/app/data"
 import { Trash2, Plus, Pencil } from "lucide-react"
+import { useEditMode } from "@/contexts/edit-mode-context"
 
 interface InfoModalProps {
   visible: boolean
@@ -24,6 +25,8 @@ interface InfoModalProps {
 }
 
 export function InfoModal({ visible, onHide, rowData, onSave, isEditMode = false }: InfoModalProps) {
+  const { isEditMode: contextEditMode } = useEditMode()
+  const actualEditMode = isEditMode || contextEditMode
   const [descriptions, setDescriptions] = React.useState<Record<string, string>>({})
   const [isEditing, setIsEditing] = React.useState(false)
   const [newKey, setNewKey] = React.useState("")
@@ -33,6 +36,8 @@ export function InfoModal({ visible, onHide, rowData, onSave, isEditMode = false
   const [showFamilyMartDialog, setShowFamilyMartDialog] = React.useState(false)
   const [showWebsiteDialog, setShowWebsiteDialog] = React.useState(false)
   const [showQRDialog, setShowQRDialog] = React.useState(false)
+  const [showGoogleMapsDialog, setShowGoogleMapsDialog] = React.useState(false)
+  const [showWazeDialog, setShowWazeDialog] = React.useState(false)
   const [websiteLink, setWebsiteLink] = React.useState("")
   const [qrCodeImageUrl, setQRCodeImageUrl] = React.useState("")
   const [qrCodeDestinationUrl, setQRCodeDestinationUrl] = React.useState("")
@@ -88,23 +93,18 @@ export function InfoModal({ visible, onHide, rowData, onSave, isEditMode = false
   }
   
   const handleShortcutClick = (type: string) => {
-    if (!isEditMode) {
-      // Open the link directly if not in edit mode
-      if (type === 'familymart' && rowData?.code && !isNaN(Number(rowData.code))) {
-        const formattedCode = rowData.code.toString().padStart(4, '0')
-        window.open(`https://fmvending.web.app/refill-service/M${formattedCode}`, '_blank')
-      } else if (type === 'googlemaps' && rowData?.lat && rowData?.lng) {
-        window.open(`https://www.google.com/maps/search/?api=1&query=${rowData.lat},${rowData.lng}`, '_blank')
-      } else if (type === 'waze' && rowData?.lat && rowData?.lng) {
-        window.open(`https://www.waze.com/ul?ll=${rowData.lat},${rowData.lng}&navigate=yes`, '_blank')
-      } else if (type === 'website' && websiteLink) {
-        let url = websiteLink
-        if (!url.startsWith('http://') && !url.startsWith('https://')) {
-          url = 'https://' + url
-        }
-        window.open(url, '_blank')
-      } else if (type === 'qrcode' && qrCodeDestinationUrl) {
-        window.open(qrCodeDestinationUrl, '_blank')
+    if (!actualEditMode) {
+      // Show confirmation dialog before opening link
+      if (type === 'familymart') {
+        setShowFamilyMartDialog(true)
+      } else if (type === 'googlemaps') {
+        setShowGoogleMapsDialog(true)
+      } else if (type === 'waze') {
+        setShowWazeDialog(true)
+      } else if (type === 'website') {
+        setShowWebsiteDialog(true)
+      } else if (type === 'qrcode') {
+        setShowQRDialog(true)
       }
     } else {
       // Open edit dialog if in edit mode
@@ -115,6 +115,30 @@ export function InfoModal({ visible, onHide, rowData, onSave, isEditMode = false
       } else if (type === 'qrcode') {
         setShowQRDialog(true)
       }
+    }
+  }
+
+  const confirmAndOpenLink = (type: string) => {
+    if (type === 'familymart' && rowData?.code && !isNaN(Number(rowData.code))) {
+      const formattedCode = rowData.code.toString().padStart(4, '0')
+      window.open(`https://fmvending.web.app/refill-service/M${formattedCode}`, '_blank')
+      setShowFamilyMartDialog(false)
+    } else if (type === 'googlemaps' && rowData?.lat && rowData?.lng) {
+      window.open(`https://www.google.com/maps/search/?api=1&query=${rowData.lat},${rowData.lng}`, '_blank')
+      setShowGoogleMapsDialog(false)
+    } else if (type === 'waze' && rowData?.lat && rowData?.lng) {
+      window.open(`https://www.waze.com/ul?ll=${rowData.lat},${rowData.lng}&navigate=yes`, '_blank')
+      setShowWazeDialog(false)
+    } else if (type === 'website' && websiteLink) {
+      let url = websiteLink
+      if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        url = 'https://' + url
+      }
+      window.open(url, '_blank')
+      setShowWebsiteDialog(false)
+    } else if (type === 'qrcode' && qrCodeDestinationUrl) {
+      window.open(qrCodeDestinationUrl, '_blank')
+      setShowQRDialog(false)
     }
   }
 
@@ -143,7 +167,7 @@ export function InfoModal({ visible, onHide, rowData, onSave, isEditMode = false
                 <span className="text-primary">ℹ️</span>
                 Location Information
               </Label>
-              {!isEditing && (
+              {!isEditing && actualEditMode && (
                 <Button
                   variant="ghost"
                   size="sm"
@@ -234,23 +258,23 @@ export function InfoModal({ visible, onHide, rowData, onSave, isEditMode = false
 
           {/* Shortcuts Section */}
           <div className="space-y-3">
-            <h3 className="text-sm font-semibold uppercase text-muted-foreground">
+            <h3 className="text-sm font-semibold uppercase text-muted-foreground text-center">
               Shortcuts
             </h3>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 justify-center">
               {/* FamilyMart Button - only show if code is numeric */}
               {rowData?.code && !isNaN(Number(rowData.code)) && (
                 <Button
                   onClick={() => handleShortcutClick('familymart')}
                   variant="ghost"
                   size="icon"
-                  className="h-10 w-10 hover:bg-transparent"
+                  className="h-11 w-11 hover:bg-transparent"
                   title="FamilyMart"
                 >
                   <img 
                     src="/FamilyMart.png" 
                     alt="FamilyMart" 
-                    className="h-8 w-8 hover:scale-110 transition-transform"
+                    className="h-11 w-11 hover:scale-110 transition-transform"
                   />
                 </Button>
               )}
@@ -261,13 +285,13 @@ export function InfoModal({ visible, onHide, rowData, onSave, isEditMode = false
                   onClick={() => handleShortcutClick('googlemaps')}
                   variant="ghost"
                   size="icon"
-                  className="h-10 w-10 hover:bg-transparent"
+                  className="h-11 w-11 hover:bg-transparent"
                   title="Google Maps"
                 >
                   <img 
                     src="/Gmaps.png" 
                     alt="Google Maps" 
-                    className="h-8 w-8 hover:scale-110 transition-transform"
+                    className="h-11 w-11 hover:scale-110 transition-transform"
                   />
                 </Button>
               )}
@@ -328,7 +352,12 @@ export function InfoModal({ visible, onHide, rowData, onSave, isEditMode = false
           <Dialog open={showFamilyMartDialog} onOpenChange={setShowFamilyMartDialog}>
             <DialogContent onOpenAutoFocus={(e) => e.preventDefault()}>
               <DialogHeader>
-                <DialogTitle>FamilyMart Link</DialogTitle>
+                <DialogTitle>{actualEditMode ? 'FamilyMart Link' : 'Open FamilyMart Link?'}</DialogTitle>
+                {!actualEditMode && (
+                  <DialogDescription>
+                    Do you want to open the FamilyMart refill service page?
+                  </DialogDescription>
+                )}
               </DialogHeader>
               <div className="space-y-4">
                 <div className="space-y-2">
@@ -342,14 +371,21 @@ export function InfoModal({ visible, onHide, rowData, onSave, isEditMode = false
                     disabled 
                   />
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  This link is automatically generated based on the machine code and cannot be edited.
-                </p>
+                {actualEditMode && (
+                  <p className="text-xs text-muted-foreground">
+                    This link is automatically generated based on the machine code and cannot be edited.
+                  </p>
+                )}
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setShowFamilyMartDialog(false)}>
-                  Close
+                  {actualEditMode ? 'Close' : 'Cancel'}
                 </Button>
+                {!actualEditMode && (
+                  <Button onClick={() => confirmAndOpenLink('familymart')}>
+                    Open Link
+                  </Button>
+                )}
               </DialogFooter>
             </DialogContent>
           </Dialog>
@@ -358,7 +394,12 @@ export function InfoModal({ visible, onHide, rowData, onSave, isEditMode = false
           <Dialog open={showWebsiteDialog} onOpenChange={setShowWebsiteDialog}>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Website Link</DialogTitle>
+                <DialogTitle>{actualEditMode ? 'Website Link' : 'Open Website?'}</DialogTitle>
+                {!actualEditMode && (
+                  <DialogDescription>
+                    Do you want to open this website?
+                  </DialogDescription>
+                )}
               </DialogHeader>
               <div className="space-y-4">
                 <div className="space-y-2">
@@ -368,6 +409,7 @@ export function InfoModal({ visible, onHide, rowData, onSave, isEditMode = false
                     value={websiteLink} 
                     onChange={(e) => setWebsiteLink(e.target.value)}
                     placeholder="https://example.com"
+                    disabled={!actualEditMode}
                   />
                 </div>
               </div>
@@ -375,12 +417,18 @@ export function InfoModal({ visible, onHide, rowData, onSave, isEditMode = false
                 <Button variant="outline" onClick={() => setShowWebsiteDialog(false)}>
                   Cancel
                 </Button>
-                <Button onClick={() => {
-                  setDescriptions(prev => ({ ...prev, websiteLink }))
-                  setShowWebsiteDialog(false)
-                }}>
-                  Save
-                </Button>
+                {actualEditMode ? (
+                  <Button onClick={() => {
+                    setDescriptions(prev => ({ ...prev, websiteLink }))
+                    setShowWebsiteDialog(false)
+                  }}>
+                    Save
+                  </Button>
+                ) : (
+                  <Button onClick={() => confirmAndOpenLink('website')}>
+                    Open Link
+                  </Button>
+                )}
               </DialogFooter>
             </DialogContent>
           </Dialog>
@@ -389,7 +437,12 @@ export function InfoModal({ visible, onHide, rowData, onSave, isEditMode = false
           <Dialog open={showQRDialog} onOpenChange={setShowQRDialog}>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>QR Code Settings</DialogTitle>
+                <DialogTitle>{actualEditMode ? 'QR Code Settings' : 'Open QR Code Link?'}</DialogTitle>
+                {!actualEditMode && (
+                  <DialogDescription>
+                    Do you want to open the QR code destination?
+                  </DialogDescription>
+                )}
               </DialogHeader>
               <div className="space-y-4">
                 <div className="space-y-2">
@@ -399,6 +452,7 @@ export function InfoModal({ visible, onHide, rowData, onSave, isEditMode = false
                     value={qrCodeImageUrl} 
                     onChange={(e) => setQRCodeImageUrl(e.target.value)}
                     placeholder="https://example.com/qrcode.png"
+                    disabled={!actualEditMode}
                   />
                 </div>
                 <div className="space-y-2">
@@ -408,6 +462,7 @@ export function InfoModal({ visible, onHide, rowData, onSave, isEditMode = false
                     value={qrCodeDestinationUrl} 
                     onChange={(e) => setQRCodeDestinationUrl(e.target.value)}
                     placeholder="https://example.com/destination"
+                    disabled={!actualEditMode}
                   />
                 </div>
               </div>
@@ -415,15 +470,81 @@ export function InfoModal({ visible, onHide, rowData, onSave, isEditMode = false
                 <Button variant="outline" onClick={() => setShowQRDialog(false)}>
                   Cancel
                 </Button>
-                <Button onClick={() => {
-                  setDescriptions(prev => ({ 
-                    ...prev, 
-                    qrCodeImageUrl, 
-                    qrCodeDestinationUrl 
-                  }))
-                  setShowQRDialog(false)
-                }}>
-                  Save
+                {actualEditMode ? (
+                  <Button onClick={() => {
+                    setDescriptions(prev => ({ 
+                      ...prev, 
+                      qrCodeImageUrl, 
+                      qrCodeDestinationUrl 
+                    }))
+                    setShowQRDialog(false)
+                  }}>
+                    Save
+                  </Button>
+                ) : (
+                  <Button onClick={() => confirmAndOpenLink('qrcode')}>
+                    Open Link
+                  </Button>
+                )}
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          {/* Google Maps Dialog */}
+          <Dialog open={showGoogleMapsDialog} onOpenChange={setShowGoogleMapsDialog}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Open in Google Maps?</DialogTitle>
+                <DialogDescription>
+                  Do you want to open this location in Google Maps?
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Location</Label>
+                  <Input value={rowData?.location || ''} disabled />
+                </div>
+                <div className="space-y-2">
+                  <Label>Coordinates</Label>
+                  <Input value={`${rowData?.lat}, ${rowData?.lng}`} disabled />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setShowGoogleMapsDialog(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={() => confirmAndOpenLink('googlemaps')}>
+                  Open in Google Maps
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          {/* Waze Dialog */}
+          <Dialog open={showWazeDialog} onOpenChange={setShowWazeDialog}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Open in Waze?</DialogTitle>
+                <DialogDescription>
+                  Do you want to navigate to this location using Waze?
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Location</Label>
+                  <Input value={rowData?.location || ''} disabled />
+                </div>
+                <div className="space-y-2">
+                  <Label>Coordinates</Label>
+                  <Input value={`${rowData?.lat}, ${rowData?.lng}`} disabled />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setShowWazeDialog(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={() => confirmAndOpenLink('waze')}>
+                  Open in Waze
                 </Button>
               </DialogFooter>
             </DialogContent>

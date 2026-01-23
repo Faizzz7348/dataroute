@@ -79,6 +79,7 @@
   --sidebar-accent-foreground: #0969da;
   --sidebar-border: #d0d7de;
   --sidebar-ring: #0969da;
+  --radius: 0.8rem;
 }
 
 /* Support for dynamic viewport units and safe areas */
@@ -142,7 +143,7 @@ html, body {
   --font-sans: Open Sans, sans-serif;
   --font-serif: Georgia, serif;
   --font-mono: Menlo, monospace;
-  --radius: 1.3rem;
+  --radius: 0.8rem;
   --shadow-x: 0px;
   --shadow-y: 2px;
   --shadow-blur: 0px;
