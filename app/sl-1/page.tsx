@@ -157,11 +157,14 @@ export default function SL1Page() {
 
   // Function to add new row
   const handleAddRow = (row: Delivery) => {
-    // Add to pending changes
+    // Fetch first delivery to get routeId
+    const routeId = deliveryData[0]?.routeId || 2 // Default to 2 for SL-1
+    
+    // Add to pending changes as CREATE
     addPendingChange({
       id: row.id,
-      type: 'update',
-      data: row
+      type: 'create',
+      data: { ...row, routeId }
     })
     
     // Update local state

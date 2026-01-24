@@ -157,11 +157,14 @@ export default function KL7Page() {
 
   // Function to add new row
   const handleAddRow = (row: Delivery) => {
-    // Add to pending changes
+    // Fetch first delivery to get routeId
+    const routeId = deliveryData[0]?.routeId || 1 // Default to 1 if no data
+    
+    // Add to pending changes as CREATE
     addPendingChange({
       id: row.id,
-      type: 'update',
-      data: row
+      type: 'create',
+      data: { ...row, routeId }
     })
     
     // Update local state

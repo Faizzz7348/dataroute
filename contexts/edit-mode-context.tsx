@@ -5,7 +5,7 @@ import { Delivery } from "@/app/data"
 
 interface PendingChange {
   id: number
-  type: 'update' | 'delete'
+  type: 'update' | 'delete' | 'create'
   data?: Delivery
 }
 
@@ -49,21 +49,44 @@ export function EditModeProvider({ children }: { children: React.ReactNode }) {
     try {
       // Process all pending changes
       for (const change of pendingChanges) {
-        if (change.type === 'update') {
-          await fetch(`/api/locations/${change.id}`, {
+        if (change.type === 'create') {
+          // New row - use POST
+          const response = await fetch('/api/locations', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(change.data),
+          })
+          if (!response.ok) {
+            const error = await response.text()
+            throw new Error(`Failed to create location: ${error}`)
+          }
+        } else if (change.type === 'update') {
+          // Existing row - use PUT
+          const response = await fetch(`/api/locations/${change.id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(change.data),
           })
+          if (!response.ok) {
+            const error = await response.text()
+            throw new Error(`Failed to update location: ${error}`)
+          }
         } else if (change.type === 'delete') {
-          await fetch(`/api/locations/${change.id}`, {
+          const response = await fetch(`/api/locations/${change.id}`, {
             method: 'DELETE',
           })
+          if (!response.ok) {
+            const error = await response.text()
+            throw new Error(`Failed to delete location: ${error}`)
+          }
         }
       }
       clearPendingChanges()
+      // Reload page to fetch fresh data
+      window.location.reload()
     } catch (error) {
       console.error('Error saving changes:', error)
+      alert(`Save failed: ${error}`)
       throw error
     } finally {
       setIsLoading(false)
