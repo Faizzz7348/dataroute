@@ -4,10 +4,11 @@ import { prisma } from '@/lib/prisma'
 // GET single location
 export async function GET(
   request: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
+  
   try {
-    const { id } = context.params
     const location = await prisma.deliveryLocation.findUnique({
       where: { id: parseInt(id) }
     })
@@ -26,11 +27,12 @@ export async function GET(
 // PUT update location
 export async function PUT(
   request: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
+  const body = await request.json()
+
   try {
-    const { id } = context.params
-    const body = await request.json()
 
     const location = await prisma.deliveryLocation.update({
       where: { id: parseInt(id) },
@@ -47,10 +49,11 @@ export async function PUT(
 // DELETE location
 export async function DELETE(
   request: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
+  
   try {
-    const { id } = context.params
     await prisma.deliveryLocation.delete({
       where: { id: parseInt(id) }
     })

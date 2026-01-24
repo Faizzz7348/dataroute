@@ -3,11 +3,11 @@ import { prisma } from '@/lib/prisma'
 
 export async function GET(
   request: Request,
-  context: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
-  try {
-    const { slug } = context.params
+  const { slug } = await params
 
+  try {
     const route = await prisma.route.findUnique({
       where: { slug },
       include: {
@@ -36,12 +36,13 @@ export async function GET(
 
 export async function PUT(
   request: Request,
-  context: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
+  const { slug } = await params
+  const body = await request.json()
+  const { locations } = body
+
   try {
-    const { slug } = context.params
-    const body = await request.json()
-    const { locations } = body
 
     const route = await prisma.route.findUnique({
       where: { slug },
