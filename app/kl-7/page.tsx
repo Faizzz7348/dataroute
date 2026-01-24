@@ -162,17 +162,6 @@ export default function KL7Page() {
     }
   }
 
-  // Convert deliveries to locations format for map
-  const mapLocations = deliveryData.map(del => ({
-    id: del.id,
-    name: del.location,
-    code: del.code,
-    lat: del.lat,
-    lng: del.lng,
-    delivery: del.delivery,
-    color: del.color
-  }))
-
   if (!mounted) return null
 
   return (
@@ -239,7 +228,7 @@ export default function KL7Page() {
                 }`}
               >
                 {showMap && (
-                  <MapComponent locations={mapLocations} selectedLocation={selectedLocation} />
+                  <MapComponent locations={deliveryData} selectedLocation={selectedLocation} />
                 )}
               </div>
             </div>
