@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { GalleryVerticalEnd, Minus, Plus, Settings, Palette, Bell, User, Shield, HelpCircle, Moon, Sun, Check } from "lucide-react"
+import { GalleryVerticalEnd, Minus, Plus, Settings, Palette, Bell, User, Shield, HelpCircle, Moon, Sun, Check, Mail, MessageSquare, Calendar, Info, Lock, Key, Eye, Book, FileText, ExternalLink } from "lucide-react"
 import { useTheme } from "next-themes"
 
 import { SearchForm } from "@/components/search-form"
@@ -35,6 +35,19 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
 } from "@/components/ui/dropdown-menu"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Separator } from "@/components/ui/separator"
+import { Switch } from "@/components/ui/switch"
 
 // This is sample data.
 const data = {
@@ -71,6 +84,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { isEditMode, setIsEditMode, isLoading, setIsLoading } = useEditMode()
   const { theme, setTheme } = useTheme()
   const [colorTheme, setColorTheme] = React.useState<string>("default")
+  
+  // Modal states
+  const [notificationsOpen, setNotificationsOpen] = React.useState(false)
+  const [accountOpen, setAccountOpen] = React.useState(false)
+  const [securityOpen, setSecurityOpen] = React.useState(false)
+  const [helpOpen, setHelpOpen] = React.useState(false)
+  
+  // Notification settings
+  const [emailNotifs, setEmailNotifs] = React.useState(true)
+  const [pushNotifs, setPushNotifs] = React.useState(true)
+  const [updateNotifs, setUpdateNotifs] = React.useState(false)
 
   // Apply color theme to document
   React.useEffect(() => {
@@ -175,12 +199,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarGroup>
         </SidebarContent>
         
-        <SidebarFooter className="shrink-0 border-t p-2 pb-safe">
+        <SidebarFooter className="shrink-0 border-t p-2 pb-safe z-50">
           <SidebarMenu>
             <SidebarMenuItem>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <SidebarMenuButton size="lg">
+                  <SidebarMenuButton size="lg" className="cursor-pointer">
                     <Settings className="h-5 w-5" />
                     <div className="flex flex-col gap-0.5 leading-none flex-1">
                       <span className="font-semibold">Settings</span>
@@ -188,7 +212,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     </div>
                   </SidebarMenuButton>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent side="top" align="end" className="w-[240px]">
+                <DropdownMenuContent side="top" align="end" className="w-[240px] z-[100]">
                   <div className="px-2 py-3 border-b">
                     <div className="flex items-center justify-between">
                       <div className="flex flex-col">
@@ -303,28 +327,28 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                       </DropdownMenuItem>
                     </DropdownMenuSubContent>
                   </DropdownMenuSub>
-                  <DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setNotificationsOpen(true)} className="cursor-pointer">
                     <Bell className="mr-2 h-4 w-4" />
                     <div className="flex flex-col">
                       <span className="font-medium">Notifications</span>
                       <span className="text-xs text-muted-foreground">Alerts & updates</span>
                     </div>
                   </DropdownMenuItem>
-                  <DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setAccountOpen(true)} className="cursor-pointer">
                     <User className="mr-2 h-4 w-4" />
                     <div className="flex flex-col">
                       <span className="font-medium">Account</span>
                       <span className="text-xs text-muted-foreground">Profile settings</span>
                     </div>
                   </DropdownMenuItem>
-                  <DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSecurityOpen(true)} className="cursor-pointer">
                     <Shield className="mr-2 h-4 w-4" />
                     <div className="flex flex-col">
                       <span className="font-medium">Security</span>
                       <span className="text-xs text-muted-foreground">Privacy & access</span>
                     </div>
                   </DropdownMenuItem>
-                  <DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setHelpOpen(true)} className="cursor-pointer">
                     <HelpCircle className="mr-2 h-4 w-4" />
                     <div className="flex flex-col">
                       <span className="font-medium">Help & Support</span>
@@ -338,6 +362,208 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarFooter>
       </div>
       <SidebarRail />
+
+      {/* Notifications Dialog */}
+      <Dialog open={notificationsOpen} onOpenChange={setNotificationsOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Bell className="h-5 w-5" />
+              Notification Settings
+            </DialogTitle>
+            <DialogDescription>
+              Manage how you receive notifications and alerts
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-6 py-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label className="text-base flex items-center gap-2">
+                  <Mail className="h-4 w-4" />
+                  Email Notifications
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  Receive updates via email
+                </p>
+              </div>
+              <Switch checked={emailNotifs} onCheckedChange={setEmailNotifs} />
+            </div>
+            <Separator />
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label className="text-base flex items-center gap-2">
+                  <MessageSquare className="h-4 w-4" />
+                  Push Notifications
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  Get instant push alerts
+                </p>
+              </div>
+              <Switch checked={pushNotifs} onCheckedChange={setPushNotifs} />
+            </div>
+            <Separator />
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label className="text-base flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  Update Reminders
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  Notify about app updates
+                </p>
+              </div>
+              <Switch checked={updateNotifs} onCheckedChange={setUpdateNotifs} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setNotificationsOpen(false)}>Done</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Account Dialog */}
+      <Dialog open={accountOpen} onOpenChange={setAccountOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <User className="h-5 w-5" />
+              Account Settings
+            </DialogTitle>
+            <DialogDescription>
+              Manage your profile and account information
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Full Name</Label>
+              <Input id="name" placeholder="Enter your name" defaultValue="VM Admin" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email Address</Label>
+              <Input id="email" type="email" placeholder="admin@vmmanager.com" defaultValue="admin@vmmanager.com" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="role">Role</Label>
+              <Input id="role" disabled defaultValue="Administrator" className="bg-muted" />
+            </div>
+            <Separator />
+            <div className="space-y-2">
+              <Label htmlFor="company">Company</Label>
+              <Input id="company" placeholder="Your company" defaultValue="VM Manager Inc." />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAccountOpen(false)}>Cancel</Button>
+            <Button onClick={() => setAccountOpen(false)}>Save Changes</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Security Dialog */}
+      <Dialog open={securityOpen} onOpenChange={setSecurityOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Shield className="h-5 w-5" />
+              Security Settings
+            </DialogTitle>
+            <DialogDescription>
+              Manage your security and privacy preferences
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-3">
+              <Label className="text-base flex items-center gap-2">
+                <Lock className="h-4 w-4" />
+                Change Password
+              </Label>
+              <div className="space-y-2">
+                <Input type="password" placeholder="Current password" />
+                <Input type="password" placeholder="New password" />
+                <Input type="password" placeholder="Confirm new password" />
+              </div>
+            </div>
+            <Separator />
+            <div className="space-y-3">
+              <Label className="text-base flex items-center gap-2">
+                <Key className="h-4 w-4" />
+                Two-Factor Authentication
+              </Label>
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-muted-foreground">
+                  Add an extra layer of security
+                </p>
+                <Button variant="outline" size="sm">Enable 2FA</Button>
+              </div>
+            </div>
+            <Separator />
+            <div className="space-y-3">
+              <Label className="text-base flex items-center gap-2">
+                <Eye className="h-4 w-4" />
+                Active Sessions
+              </Label>
+              <div className="rounded-lg border p-3 space-y-2">
+                <div className="flex justify-between items-center text-sm">
+                  <span className="font-medium">Current Device</span>
+                  <span className="text-green-600 text-xs">Active now</span>
+                </div>
+                <p className="text-xs text-muted-foreground">Chrome on Windows • Last activity: Just now</p>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSecurityOpen(false)}>Cancel</Button>
+            <Button onClick={() => setSecurityOpen(false)}>Update Security</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Help & Support Dialog */}
+      <Dialog open={helpOpen} onOpenChange={setHelpOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <HelpCircle className="h-5 w-5" />
+              Help & Support
+            </DialogTitle>
+            <DialogDescription>
+              Get help and access documentation
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-4">
+            <Button variant="outline" className="w-full justify-start gap-2" asChild>
+              <a href="https://docs.example.com" target="_blank" rel="noopener noreferrer">
+                <Book className="h-4 w-4" />
+                Documentation
+                <ExternalLink className="h-3 w-3 ml-auto" />
+              </a>
+            </Button>
+            <Button variant="outline" className="w-full justify-start gap-2">
+              <FileText className="h-4 w-4" />
+              User Guide
+            </Button>
+            <Button variant="outline" className="w-full justify-start gap-2">
+              <MessageSquare className="h-4 w-4" />
+              Contact Support
+            </Button>
+            <Separator />
+            <div className="rounded-lg bg-muted p-4 space-y-2">
+              <div className="flex items-center gap-2">
+                <Info className="h-4 w-4 text-muted-foreground" />
+                <Label className="text-sm font-semibold">Application Info</Label>
+              </div>
+              <div className="space-y-1 text-sm text-muted-foreground">
+                <p>Version: 1.0.0</p>
+                <p>Build: 2026.01.24</p>
+                <p>License: Commercial</p>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setHelpOpen(false)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Sidebar>
   )
 }

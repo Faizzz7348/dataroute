@@ -1,42 +1,37 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
   directUrl = env("POSTGRES_URL")
 }
 
-// Delivery Location Model
 model DeliveryLocation {
-  id            Int       @id @default(autoincrement())
-  code          Int       @unique
-  location      String
-  delivery      String
-  lat           Float
-  lng           Float
-  color         String
-  powerMode     String?   // daily, alt1, alt2, weekday, weekend, notset
-  descriptionsObj Json?   @default("{}")
-  routeId       Int
-  route         Route     @relation(fields: [routeId], references: [id], onDelete: Cascade)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id              Int      @id @default(autoincrement())
+  code            Int      @unique
+  location        String
+  delivery        String
+  lat             Float
+  lng             Float
+  color           String
+  powerMode       String?
+  descriptionsObj Json?    @default("{}")
+  routeId         Int
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  route           Route    @relation(fields: [routeId], references: [id], onDelete: Cascade)
 
   @@index([routeId])
 }
 
-// Route Model
 model Route {
-  id          Int                 @id @default(autoincrement())
-  name        String              @unique
-  slug        String              @unique
+  id          Int                @id @default(autoincrement())
+  name        String             @unique
+  slug        String             @unique
   description String?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
   locations   DeliveryLocation[]
-  createdAt   DateTime            @default(now())
-  updatedAt   DateTime            @updatedAt
 }

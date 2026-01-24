@@ -119,10 +119,11 @@ interface DataTableProps {
   data: Delivery[]
   onLocationClick?: (locationName: string) => void
   onEditRow?: (rowId: number) => void
+  onDeleteRow?: (rowId: number) => Promise<void>
   showMap?: boolean
 }
 
-export function DataTable({ data, onLocationClick, onEditRow, showMap = true }: DataTableProps) {
+export function DataTable({ data, onLocationClick, onEditRow, onDeleteRow, showMap = true }: DataTableProps) {
   'use no memo'
   
   const { isEditMode } = useEditMode()
@@ -288,11 +289,19 @@ export function DataTable({ data, onLocationClick, onEditRow, showMap = true }: 
     setAddRowDialogOpen(false)
   }
 
-  const handleDeleteRow = () => {
+  const handleDeleteRow = async () => {
     if (selectedDeleteRow) {
-      setTableData(tableData.filter(row => row.id !== selectedDeleteRow.id))
-      setDeleteDialogOpen(false)
-      setSelectedDeleteRow(null)
+      try {
+        if (onDeleteRow) {
+          await onDeleteRow(selectedDeleteRow.id)
+        }
+        setTableData(tableData.filter(row => row.id !== selectedDeleteRow.id))
+        setDeleteDialogOpen(false)
+        setSelectedDeleteRow(null)
+      } catch (error) {
+        console.error('Error deleting row:', error)
+        // Keep dialog open if error occurs
+      }
     }
   }
 

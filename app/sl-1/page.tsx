@@ -47,9 +47,6 @@ const MapComponent = dynamic(
   }
 )
 
-// Empty deliveries data for SL 1
-const sl1Deliveries: Delivery[] = []
-
 export default function SL1Page() {
   const { showPageLoading } = usePageLoading()
   const [mounted, setMounted] = useState(false)
@@ -58,14 +55,31 @@ export default function SL1Page() {
   const [editModalOpen, setEditModalOpen] = useState(false)
   const [editingRow, setEditingRow] = useState<Delivery | null>(null)
   const [codeError, setCodeError] = useState<string>('')
-  const [deliveryData, setDeliveryData] = useState<Delivery[]>(
-    [...sl1Deliveries].sort((a, b) => a.code - b.code)
-  )
+  const [deliveryData, setDeliveryData] = useState<Delivery[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     showPageLoading("Opening Route SL-1", 800)
     setTimeout(() => setMounted(true), 800)
   }, [showPageLoading])
+
+  // Fetch data from database
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch('/api/routes/sl-1/locations')
+        if (response.ok) {
+          const data = await response.json()
+          setDeliveryData(data.sort((a: Delivery, b: Delivery) => a.code - b.code))
+        }
+      } catch (error) {
+        console.error('Error fetching locations:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchData()
+  }, [])
 
   // Function to find location by name and fly to it
   const handleLocationClick = (locationName: string) => {
@@ -103,7 +117,7 @@ export default function SL1Page() {
   }
 
   // Function to save edited row
-  const handleSaveRow = () => {
+  const handleSaveRow = async () => {
     if (editingRow) {
       // Check for duplicate code
       if (checkDuplicateCode(editingRow.code, editingRow.id)) {
@@ -111,14 +125,53 @@ export default function SL1Page() {
         return
       }
       
-      setDeliveryData((prev) =>
-        prev.map((del) =>
-          del.id === editingRow.id ? editingRow : del
-        ).sort((a, b) => a.code - b.code)
-      )
-      setEditModalOpen(false)
-      setEditingRow(null)
-      setCodeError('')
+      try {
+        // Call API to update in database
+        const response = await fetch(`/api/locations/${editingRow.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(editingRow),
+        })
+
+        if (!response.ok) {
+          throw new Error('Failed to update location')
+        }
+
+        // Update local state after successful API call
+        setDeliveryData((prev) =>
+          prev.map((del) =>
+            del.id === editingRow.id ? editingRow : del
+          ).sort((a, b) => a.code - b.code)
+        )
+        setEditModalOpen(false)
+        setEditingRow(null)
+        setCodeError('')
+      } catch (error) {
+        console.error('Error updating location:', error)
+        setCodeError('Failed to save changes. Please try again.')
+      }
+    }
+  }
+
+  // Function to delete row
+  const handleDeleteRow = async (rowId: number) => {
+    try {
+      // Call API to delete from database
+      const response = await fetch(`/api/locations/${rowId}`, {
+        method: 'DELETE',
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to delete location')
+      }
+
+      // Update local state after successful API call
+      setDeliveryData((prev) => prev.filter((del) => del.id !== rowId))
+    } catch (error) {
+      console.error('Error deleting location:', error)
+      throw error // Re-throw to let DataTable handle the error
     }
   }
 
@@ -210,6 +263,7 @@ export default function SL1Page() {
             data={deliveryData} 
             onLocationClick={handleLocationClick} 
             onEditRow={handleEditRow}
+            onDeleteRow={handleDeleteRow}
             showMap={showMap} 
           />
         </div>
