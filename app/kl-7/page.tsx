@@ -49,7 +49,7 @@ const MapComponent = dynamic(
 export default function KL7Page() {
   const { showPageLoading } = usePageLoading()
   const [mounted, setMounted] = useState(false)
-  const [selectedLocation, setSelectedLocation] = useState<typeof locations[0] | null>(null)
+  const [selectedLocation, setSelectedLocation] = useState<Delivery | null>(null)
   const [showMap, setShowMap] = useState(false)
   const [editModalOpen, setEditModalOpen] = useState(false)
   const [editingRow, setEditingRow] = useState<Delivery | null>(null)
