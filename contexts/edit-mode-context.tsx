@@ -19,6 +19,7 @@ interface EditModeContextType {
   addPendingChange: (change: PendingChange) => void
   clearPendingChanges: () => void
   saveAllChanges: () => Promise<void>
+  savingMessage: string
 }
 
 const EditModeContext = React.createContext<EditModeContextType | undefined>(undefined)
@@ -27,6 +28,7 @@ export function EditModeProvider({ children }: { children: React.ReactNode }) {
   const [isEditMode, setIsEditMode] = React.useState(false)
   const [isLoading, setIsLoading] = React.useState(false)
   const [pendingChanges, setPendingChanges] = React.useState<PendingChange[]>([])
+  const [savingMessage, setSavingMessage] = React.useState('')
 
   const hasUnsavedChanges = pendingChanges.length > 0
 
@@ -46,9 +48,18 @@ export function EditModeProvider({ children }: { children: React.ReactNode }) {
 
   const saveAllChanges = React.useCallback(async () => {
     setIsLoading(true)
+    setSavingMessage('🔄 Initializing save process')
+    
     try {
+      const totalChanges = pendingChanges.length
+      let processedChanges = 0
+      
       // Process all pending changes
       for (const change of pendingChanges) {
+        processedChanges++
+        const percentage = Math.round((processedChanges / totalChanges) * 100)
+        setSavingMessage(`💾 Saving your data (${percentage}%)... Please wait`)
+        
         if (change.type === 'create') {
           // New row - use POST
           const response = await fetch('/api/locations', {
@@ -81,15 +92,21 @@ export function EditModeProvider({ children }: { children: React.ReactNode }) {
           }
         }
       }
+      
+      setSavingMessage('✅ Changes saved successfully! Refreshing data')
       clearPendingChanges()
-      // Reload page to fetch fresh data
+      
+      // Small delay to show success message
+      await new Promise(resolve => setTimeout(resolve, 800))
+      
+      // Smooth reload
       window.location.reload()
     } catch (error) {
       console.error('Error saving changes:', error)
-      alert(`Save failed: ${error}`)
-      throw error
-    } finally {
+      setSavingMessage('')
       setIsLoading(false)
+      alert(`❌ Save failed: ${error}`)
+      throw error
     }
   }, [pendingChanges, clearPendingChanges])
 
@@ -103,7 +120,8 @@ export function EditModeProvider({ children }: { children: React.ReactNode }) {
       pendingChanges,
       addPendingChange,
       clearPendingChanges,
-      saveAllChanges
+      saveAllChanges,
+      savingMessage
     }}>
       {children}
     </EditModeContext.Provider>

@@ -118,10 +118,11 @@ interface DataTableProps {
   onEditRow?: (rowId: number) => void
   onDeleteRow?: (rowId: number) => Promise<void>
   onAddRow?: (row: Delivery) => void
+  onPowerModeChange?: (rowId: number, powerMode: string | null) => void
   showMap?: boolean
 }
 
-export function DataTable({ data, onLocationClick, onEditRow, onDeleteRow, onAddRow, showMap = true }: DataTableProps) {
+export function DataTable({ data, onLocationClick, onEditRow, onDeleteRow, onAddRow, onPowerModeChange, showMap = true }: DataTableProps) {
   'use no memo'
   
   const { isEditMode } = useEditMode()
@@ -520,12 +521,12 @@ export function DataTable({ data, onLocationClick, onEditRow, onDeleteRow, onAdd
         </div>
         <div className="overflow-auto max-h-[calc(100vh-300px)] border-2 border-primary/10 shadow-lg bg-gradient-to-br from-background to-muted/20">
         <table className="w-full caption-bottom text-sm relative">
-          <thead className="">
+          <thead>
             {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id} className="bg-gradient-to-r from-primary/10 to-primary/5 border-b-2 border-primary/20 sticky top-0 z-10">
+              <tr key={headerGroup.id} className="border-b-2 border-primary/20 sticky top-0 z-[30]">
                 {headerGroup.headers.map((header) => {
                   return (
-                    <th key={header.id} className="h-12 px-4 text-center align-middle font-bold text-foreground" style={{ fontSize: '13px' }}>
+                    <th key={header.id} className="h-12 px-4 text-center align-middle font-bold text-foreground bg-background" style={{ fontSize: '13px', boxShadow: 'inset 0 0 0 2px hsl(var(--primary) / 0.1)' }}>
                       {header.isPlaceholder
                         ? null
                         : flexRender(
@@ -589,7 +590,7 @@ export function DataTable({ data, onLocationClick, onEditRow, onDeleteRow, onAdd
 
       {/* Column Settings Dialog */}
       <Dialog open={columnDialogOpen} onOpenChange={setColumnDialogOpen}>
-        <DialogContent onOpenAutoFocus={(e) => e.preventDefault()}>
+        <DialogContent className="backdrop-blur-sm" onOpenAutoFocus={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle>Column Settings</DialogTitle>
             <DialogDescription>
@@ -642,7 +643,7 @@ export function DataTable({ data, onLocationClick, onEditRow, onDeleteRow, onAdd
 
       {/* Add New Row Dialog */}
       <Dialog open={addRowDialogOpen} onOpenChange={setAddRowDialogOpen}>
-        <DialogContent onOpenAutoFocus={(e) => e.preventDefault()}>
+        <DialogContent className="backdrop-blur-sm" onOpenAutoFocus={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle>Add New Row</DialogTitle>
             <DialogDescription>
@@ -707,7 +708,7 @@ export function DataTable({ data, onLocationClick, onEditRow, onDeleteRow, onAdd
 
       {/* Row Settings Dialog */}
       <Dialog open={rowDialogOpen} onOpenChange={setRowDialogOpen}>
-        <DialogContent className="max-w-[90vw] max-h-[80vh]" onOpenAutoFocus={(e) => e.preventDefault()}>
+        <DialogContent className="max-w-[90vw] max-h-[80vh] backdrop-blur-sm" onOpenAutoFocus={(e) => e.preventDefault()}>
           <DialogHeader className="space-y-2 pb-4 border-b">
             <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
               Row Settings
@@ -730,11 +731,11 @@ export function DataTable({ data, onLocationClick, onEditRow, onDeleteRow, onAdd
                 <div className="max-h-[300px] overflow-auto">
                   <table className="w-full caption-bottom text-sm">
                     <thead>
-                      <tr className="bg-gradient-to-r from-primary/10 to-primary/5 border-b-2 border-primary/20 sticky top-0 z-10">
-                        <th className="h-12 px-4 text-center align-middle font-bold text-foreground w-[120px]" style={{ fontSize: '13px' }}>Order</th>
-                        <th className="h-12 px-4 text-center align-middle font-bold text-foreground w-[150px]" style={{ fontSize: '13px' }}>Code</th>
-                        <th className="h-12 px-4 text-center align-middle font-bold text-foreground w-[300px]" style={{ fontSize: '13px' }}>Location</th>
-                        <th className="h-12 px-4 text-center align-middle font-bold text-foreground w-[250px]" style={{ fontSize: '13px' }}>Delivery</th>
+                      <tr className="border-b-2 border-primary/20 sticky top-0 z-[30]">
+                        <th className="h-12 px-4 text-center align-middle font-bold text-foreground w-[120px] bg-background" style={{ fontSize: '13px', boxShadow: 'inset 0 0 0 2px hsl(var(--primary) / 0.1)' }}>Order</th>
+                        <th className="h-12 px-4 text-center align-middle font-bold text-foreground w-[150px] bg-background" style={{ fontSize: '13px', boxShadow: 'inset 0 0 0 2px hsl(var(--primary) / 0.1)' }}>Code</th>
+                        <th className="h-12 px-4 text-center align-middle font-bold text-foreground w-[300px] bg-background" style={{ fontSize: '13px', boxShadow: 'inset 0 0 0 2px hsl(var(--primary) / 0.1)' }}>Location</th>
+                        <th className="h-12 px-4 text-center align-middle font-bold text-foreground w-[250px] bg-background" style={{ fontSize: '13px', boxShadow: 'inset 0 0 0 2px hsl(var(--primary) / 0.1)' }}>Delivery</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -829,7 +830,12 @@ export function DataTable({ data, onLocationClick, onEditRow, onDeleteRow, onAdd
         rowData={selectedPowerRow}
         onSave={(newMode) => {
           if (selectedPowerRow) {
-            // Update data dengan power mode baru
+            // Call parent handler if provided
+            if (onPowerModeChange) {
+              onPowerModeChange(selectedPowerRow.id, newMode)
+            }
+            
+            // Update local data dengan power mode baru
             const updatedData = tableData.map((row) =>
               row.id === selectedPowerRow.id 
                 ? { ...row, powerMode: newMode as 'daily' | 'alt1' | 'alt2' | 'weekday' | 'weekend' | 'notset' | null } 

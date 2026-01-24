@@ -81,7 +81,7 @@ const data = {
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { isEditMode, setIsEditMode, isLoading, setIsLoading, hasUnsavedChanges, saveAllChanges, pendingChanges } = useEditMode()
+  const { isEditMode, setIsEditMode, isLoading, setIsLoading, hasUnsavedChanges, saveAllChanges, pendingChanges, savingMessage } = useEditMode()
   const { theme, setTheme } = useTheme()
   const [colorTheme, setColorTheme] = React.useState<string>("default")
   
@@ -406,7 +406,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
       {/* Notifications Dialog */}
       <Dialog open={notificationsOpen} onOpenChange={setNotificationsOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[500px] backdrop-blur-sm">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Bell className="h-5 w-5" />
@@ -464,7 +464,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
       {/* Account Dialog */}
       <Dialog open={accountOpen} onOpenChange={setAccountOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[500px] backdrop-blur-sm">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <User className="h-5 w-5" />
@@ -502,7 +502,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
       {/* Security Dialog */}
       <Dialog open={securityOpen} onOpenChange={setSecurityOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[500px] backdrop-blur-sm">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Shield className="h-5 w-5" />
@@ -561,7 +561,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
       {/* Help & Support Dialog */}
       <Dialog open={helpOpen} onOpenChange={setHelpOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[500px] backdrop-blur-sm">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <HelpCircle className="h-5 w-5" />
@@ -608,13 +608,22 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
       {/* Save Confirmation Dialog */}
       <Dialog open={saveConfirmOpen} onOpenChange={setSaveConfirmOpen}>
-        <DialogContent>
+        <DialogContent className="backdrop-blur-sm">
           <DialogHeader>
             <DialogTitle>Save Changes</DialogTitle>
             <DialogDescription>
-              Are you sure you want to save all pending changes? This action cannot be undone.
+              {isLoading ? savingMessage : `You have ${pendingChanges.length} pending ${pendingChanges.length === 1 ? 'change' : 'changes'}. Save all changes to the database?`}
             </DialogDescription>
           </DialogHeader>
+          {!isLoading && (
+            <div className="py-2">
+              <div className="rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 p-3">
+                <p className="text-sm text-blue-800 dark:text-blue-200">
+                  <strong>Note:</strong> The page will refresh after saving to load the updated data.
+                </p>
+              </div>
+            </div>
+          )}
           <DialogFooter className="gap-2">
             <Button 
               variant="outline" 
@@ -628,7 +637,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               disabled={isLoading}
               className="bg-green-600 hover:bg-green-700"
             >
-              {isLoading ? "Saving..." : "Save All Changes"}
+              {isLoading ? (
+                <span className="flex items-center gap-2">
+                  <span className="animate-spin">⏳</span>
+                  {savingMessage || "Saving..."}
+                </span>
+              ) : (
+                "Save All Changes"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -636,7 +652,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
       {/* Edit Mode OFF Confirmation Dialog */}
       <Dialog open={editModeOffConfirm} onOpenChange={setEditModeOffConfirm}>
-        <DialogContent>
+        <DialogContent className="backdrop-blur-sm">
           <DialogHeader>
             <DialogTitle className="text-amber-600">Unsaved Changes Detected</DialogTitle>
             <DialogDescription>

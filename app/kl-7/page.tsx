@@ -34,6 +34,13 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 const MapComponent = dynamic(
   () => import("@/components/map-component").then((mod) => mod.MapComponent),
@@ -178,6 +185,27 @@ export default function KL7Page() {
     setDeliveryData((prev) => [...prev, row].sort((a, b) => a.code - b.code))
   }
 
+  // Function to handle power mode change
+  const handlePowerModeChange = (rowId: number, powerMode: string | null) => {
+    const row = deliveryData.find((del) => del.id === rowId)
+    if (row) {
+      const isNewRow = newRowIds.has(rowId)
+      const updatedRow = { ...row, powerMode: powerMode as 'daily' | 'alt1' | 'alt2' | 'weekday' | 'weekend' | 'notset' | null }
+      
+      // Add to pending changes
+      addPendingChange({
+        id: rowId,
+        type: isNewRow ? 'create' : 'update',
+        data: isNewRow ? { ...updatedRow, routeId: deliveryData[0]?.routeId || 1 } : updatedRow
+      })
+      
+      // Update local state
+      setDeliveryData((prev) =>
+        prev.map((del) => (del.id === rowId ? updatedRow : del))
+      )
+    }
+  }
+
   if (!mounted) return null
 
   return (
@@ -205,60 +233,66 @@ export default function KL7Page() {
           </Breadcrumb>
           <ModeToggle />
         </header>
-        <div className="flex flex-1 flex-col gap-4 p-4 relative z-0">
-          {/* Map Section - Full Width */}
-          <div className="rounded-lg border p-4 relative z-0">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-base font-semibold">Map View</h2>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowMap(!showMap)}
-                className="flex items-center gap-2"
-              >
-                {showMap ? (
-                  <>
-                    <EyeOff className="h-4 w-4 text-red-600" />
-                    <span className="text-red-600">Hide Map</span>
-                  </>
-                ) : (
-                  <>
-                    <Eye className="h-4 w-4 text-green-600" />
-                    <span className="text-green-600">Show Map</span>
-                  </>
-                )}
-              </Button>
-            </div>
-            <div 
-              className={`overflow-hidden transition-all duration-700 ease-in-out ${
-                showMap ? 'max-h-[500px] opacity-100 scale-100' : 'max-h-0 opacity-0 scale-95'
-              }`}
-              style={{ 
-                transformOrigin: 'top center',
-              }}
-            >
+        <div className="flex flex-1 flex-col gap-4 p-4">
+          <div className="min-h-[100vh] flex-1 rounded-xl border bg-muted/50 p-8 shadow-sm">
+            {/* Map Section */}
+            <div className="mb-6">
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-2xl font-semibold">Map View</h2>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowMap(!showMap)}
+                  className="flex items-center gap-2"
+                >
+                  {showMap ? (
+                    <>
+                      <EyeOff className="h-4 w-4 text-red-600" />
+                      <span className="text-red-600">Hide Map</span>
+                    </>
+                  ) : (
+                    <>
+                      <Eye className="h-4 w-4 text-green-600" />
+                      <span className="text-green-600">Show Map</span>
+                    </>
+                  )}
+                </Button>
+              </div>
               <div 
-                style={{ height: "500px" }}
-                className={`transition-transform duration-700 ease-out ${
-                  showMap ? 'scale-100' : 'scale-90'
+                className={`overflow-hidden transition-all duration-700 ease-in-out ${
+                  showMap ? 'max-h-[500px] opacity-100 scale-100' : 'max-h-0 opacity-0 scale-95'
                 }`}
+                style={{ 
+                  transformOrigin: 'top center',
+                }}
               >
-                {showMap && (
-                  <MapComponent locations={deliveryData} selectedLocation={selectedLocation} />
-                )}
+                <div 
+                  style={{ height: "500px" }}
+                  className={`transition-transform duration-700 ease-out ${
+                    showMap ? 'scale-100' : 'scale-90'
+                  }`}
+                >
+                  {showMap && (
+                    <MapComponent locations={deliveryData} selectedLocation={selectedLocation} />
+                  )}
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Data Table Section - Full Width */}
-          <DataTable 
-            data={deliveryData} 
-            onLocationClick={handleLocationClick} 
-            onEditRow={handleEditRow}
-            onDeleteRow={handleDeleteRow}
-            onAddRow={handleAddRow}
-            showMap={showMap} 
-          />
+            {/* Data Table Section */}
+            <div>
+              <h2 className="text-2xl font-semibold mb-4">Data Management</h2>
+              <DataTable 
+                data={deliveryData} 
+                onLocationClick={handleLocationClick} 
+                onEditRow={handleEditRow}
+                onDeleteRow={handleDeleteRow}
+                onAddRow={handleAddRow}
+                onPowerModeChange={handlePowerModeChange}
+                showMap={showMap} 
+              />
+            </div>
+          </div>
         </div>
 
         {/* Edit Row Modal */}
@@ -315,19 +349,24 @@ export default function KL7Page() {
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="delivery-type">Delivery Type</Label>
-                  <select
-                    id="delivery-type"
+                  <Select
                     value={editingRow.delivery}
-                    onChange={(e) =>
-                      setEditingRow({ ...editingRow, delivery: e.target.value })
+                    onValueChange={(value) =>
+                      setEditingRow({ ...editingRow, delivery: value })
                     }
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                   >
-                    <option value="Daily">Daily</option>
-                    <option value="Weekday">Weekday</option>
-                    <option value="Alt 1">Alt 1</option>
-                    <option value="Alt 2">Alt 2</option>
-                  </select>
+                    <SelectTrigger id="delivery-type">
+                      <SelectValue placeholder="Select delivery type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Daily">Daily</SelectItem>
+                      <SelectItem value="Weekday">Weekday</SelectItem>
+                      <SelectItem value="Alt 1">Alt 1</SelectItem>
+                      <SelectItem value="Alt 2">Alt 2</SelectItem>
+                      <SelectItem value="Weekly">Weekly</SelectItem>
+                      <SelectItem value="Monthly">Monthly</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-2">
