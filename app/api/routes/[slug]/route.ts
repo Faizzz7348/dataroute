@@ -3,10 +3,10 @@ import { prisma } from '@/lib/prisma'
 
 export async function GET(
   request: Request,
-  { params }: { params: { slug: string } }
+  context: { params: { slug: string } }
 ) {
   try {
-    const { slug } = params
+    const { slug } = context.params
 
     const route = await prisma.route.findUnique({
       where: { slug },
@@ -36,10 +36,10 @@ export async function GET(
 
 export async function PUT(
   request: Request,
-  { params }: { params: { slug: string } }
+  context: { params: { slug: string } }
 ) {
   try {
-    const { slug } = params
+    const { slug } = context.params
     const body = await request.json()
     const { locations } = body
 
