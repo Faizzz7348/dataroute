@@ -115,7 +115,7 @@ export function PowerModeModal({ visible, onHide, rowData, onSave }: PowerModeMo
                       ? 'border-primary/50 bg-primary/5 shadow-sm' 
                       : 'border-border hover:border-primary/30'
                   }`}
-                  onClick={() => setTempSelectedMode(mode.value as string | null)}
+                  onClick={() => setTempSelectedMode(mode.value as "daily" | "alt1" | "alt2" | "weekday" | "weekend" | "notset" | null)}
                 >
                   <div className="flex items-center gap-3">
                     <div className="text-3xl p-2 bg-muted/50 rounded-lg">{mode.icon}</div>
