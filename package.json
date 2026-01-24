@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "postinstall": "prisma generate",
-    "vercel-build": "prisma generate && prisma db push --accept-data-loss && next build",
+    "vercel-build": "prisma generate && next build",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:seed": "node --import tsx prisma/seed.ts",
