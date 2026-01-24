@@ -110,10 +110,11 @@ interface DataTableProps {
   onLocationClick?: (locationName: string) => void
   onEditRow?: (rowId: number) => void
   onDeleteRow?: (rowId: number) => Promise<void>
+  onAddRow?: (row: Delivery) => void
   showMap?: boolean
 }
 
-export function DataTable({ data, onLocationClick, onEditRow, onDeleteRow, showMap = true }: DataTableProps) {
+export function DataTable({ data, onLocationClick, onEditRow, onDeleteRow, onAddRow, showMap = true }: DataTableProps) {
   'use no memo'
   
   const { isEditMode } = useEditMode()
@@ -273,6 +274,9 @@ export function DataTable({ data, onLocationClick, onEditRow, onDeleteRow, showM
       delivery: newRowData.delivery || "",
       lat: 0,
       lng: 0,
+    }
+    if (onAddRow) {
+      onAddRow(newRow)
     }
     setTableData([...tableData, newRow])
     setNewRowData({ code: "", location: "", delivery: "" })

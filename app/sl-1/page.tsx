@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { AppSidebar } from "@/components/app-sidebar"
 import { ModeToggle } from "@/components/mode-toggle"
 import { usePageLoading } from "@/contexts/page-loading-context"
+import { useEditMode } from "@/contexts/edit-mode-context"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -48,6 +49,7 @@ const MapComponent = dynamic(
 
 export default function SL1Page() {
   const { showPageLoading } = usePageLoading()
+  const { addPendingChange } = useEditMode()
   const [mounted, setMounted] = useState(false)
   const [selectedLocation, setSelectedLocation] = useState<Delivery | null>(null)
   const [showMap, setShowMap] = useState(false)
@@ -113,20 +115,14 @@ export default function SL1Page() {
       }
       
       try {
-        // Call API to update in database
-        const response = await fetch(`/api/locations/${editingRow.id}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(editingRow),
+        // Add to pending changes instead of immediate save
+        addPendingChange({
+          id: editingRow.id,
+          type: 'update',
+          data: editingRow
         })
 
-        if (!response.ok) {
-          throw new Error('Failed to update location')
-        }
-
-        // Update local state after successful API call
+        // Update local state immediately for UI feedback
         setDeliveryData((prev) =>
           prev.map((del) =>
             del.id === editingRow.id ? editingRow : del
@@ -145,21 +141,31 @@ export default function SL1Page() {
   // Function to delete row
   const handleDeleteRow = async (rowId: number) => {
     try {
-      // Call API to delete from database
-      const response = await fetch(`/api/locations/${rowId}`, {
-        method: 'DELETE',
+      // Add to pending changes instead of immediate delete
+      addPendingChange({
+        id: rowId,
+        type: 'delete'
       })
 
-      if (!response.ok) {
-        throw new Error('Failed to delete location')
-      }
-
-      // Update local state after successful API call
+      // Update local state immediately for UI feedback
       setDeliveryData((prev) => prev.filter((del) => del.id !== rowId))
     } catch (error) {
       console.error('Error deleting location:', error)
       throw error // Re-throw to let DataTable handle the error
     }
+  }
+
+  // Function to add new row
+  const handleAddRow = (row: Delivery) => {
+    // Add to pending changes
+    addPendingChange({
+      id: row.id,
+      type: 'update',
+      data: row
+    })
+    
+    // Update local state
+    setDeliveryData((prev) => [...prev, row].sort((a, b) => a.code - b.code))
   }
 
   if (!mounted) return null
@@ -240,6 +246,7 @@ export default function SL1Page() {
             onLocationClick={handleLocationClick} 
             onEditRow={handleEditRow}
             onDeleteRow={handleDeleteRow}
+            onAddRow={handleAddRow}
             showMap={showMap} 
           />
         </div>

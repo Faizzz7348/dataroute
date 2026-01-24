@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { GalleryVerticalEnd, Minus, Plus, Settings, Palette, Bell, User, Shield, HelpCircle, Moon, Sun, Check, Mail, MessageSquare, Calendar, Info, Lock, Key, Eye, Book, FileText, ExternalLink } from "lucide-react"
+import { GalleryVerticalEnd, Minus, Plus, Settings, Palette, Bell, User, Shield, HelpCircle, Moon, Sun, Check, Mail, MessageSquare, Calendar, Info, Lock, Key, Eye, Book, FileText, ExternalLink, Save } from "lucide-react"
 import { useTheme } from "next-themes"
 
 import { SearchForm } from "@/components/search-form"
@@ -81,15 +81,21 @@ const data = {
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { isEditMode, setIsEditMode, isLoading, setIsLoading } = useEditMode()
+  const { isEditMode, setIsEditMode, isLoading, setIsLoading, hasUnsavedChanges, saveAllChanges, pendingChanges } = useEditMode()
   const { theme, setTheme } = useTheme()
   const [colorTheme, setColorTheme] = React.useState<string>("default")
+  
+  // Debug log
+  React.useEffect(() => {
+    console.log('Sidebar - hasUnsavedChanges:', hasUnsavedChanges, 'pendingChanges:', pendingChanges)
+  }, [hasUnsavedChanges, pendingChanges])
   
   // Modal states
   const [notificationsOpen, setNotificationsOpen] = React.useState(false)
   const [accountOpen, setAccountOpen] = React.useState(false)
   const [securityOpen, setSecurityOpen] = React.useState(false)
   const [helpOpen, setHelpOpen] = React.useState(false)
+  const [saveConfirmOpen, setSaveConfirmOpen] = React.useState(false)
   
   // Notification settings
   const [emailNotifs, setEmailNotifs] = React.useState(true)
@@ -132,6 +138,16 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     // Keep loading state for a moment to show the transition
     await new Promise(resolve => setTimeout(resolve, 400))
     setIsLoading(false)
+  }
+
+  const handleSaveChanges = async () => {
+    try {
+      await saveAllChanges()
+      setSaveConfirmOpen(false)
+    } catch (error) {
+      console.error('Failed to save changes:', error)
+      // You can add toast notification here
+    }
   }
 
   return (
@@ -201,6 +217,20 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         
         <SidebarFooter className="shrink-0 border-t p-2 pb-safe z-50">
           <SidebarMenu>
+            {/* Save Button - Only show when there are unsaved changes */}
+            {hasUnsavedChanges && (
+              <SidebarMenuItem>
+                <SidebarMenuButton 
+                  size="lg" 
+                  className="cursor-pointer bg-green-500/10 hover:bg-green-500/20 text-green-600 dark:text-green-400"
+                  onClick={() => setSaveConfirmOpen(true)}
+                >
+                  <Save className="h-5 w-5" />
+                  <span className="font-bold">Save Changes</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            )}
+            
             <SidebarMenuItem>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -557,6 +587,34 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </div>
           <DialogFooter>
             <Button onClick={() => setHelpOpen(false)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Save Confirmation Dialog */}
+      <Dialog open={saveConfirmOpen} onOpenChange={setSaveConfirmOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Save Changes</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to save all pending changes? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => setSaveConfirmOpen(false)}
+              disabled={isLoading}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleSaveChanges}
+              disabled={isLoading}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              {isLoading ? "Saving..." : "Save All Changes"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
