@@ -2,14 +2,26 @@
 
 ## Environment Variables Setup
 
-1. Go to your Vercel project settings
-2. Navigate to **Environment Variables**
-3. Add the following variables:
+⚠️ **IMPORTANT:** Set environment variables in Vercel Dashboard, NOT in code files!
 
-### Required Variables:
-- `DATABASE_URL` = `postgres://2735c59a6f6f1e22da9d8e47d1223222476db1ee5e136cef183a40a91dc76ea4:sk_p3tdRQir1MdSx5T-2WoGN@db.prisma.io:5432/postgres?sslmode=require`
-- `POSTGRES_URL` = `postgres://2735c59a6f6f1e22da9d8e47d1223222476db1ee5e136cef183a40a91dc76ea4:sk_p3tdRQir1MdSx5T-2WoGN@db.prisma.io:5432/postgres?sslmode=require`
-- `PRISMA_DATABASE_URL` = `prisma+postgres://accelerate.prisma-data.net/?api_key=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqd3RfaWQiOjEsInNlY3VyZV9rZXkiOiJza19wM3RkUlFpcjFNZFN4NVQtMldvR04iLCJhcGlfa2V5IjoiMDFLRlBIMTdDS0RTMkU0MUZKQ1daSDJKS0UiLCJ0ZW5hbnRfaWQiOiIyNzM1YzU5YTZmNmYxZTIyZGE5ZDhlNDdkMTIyMzIyMjQ3NmRiMWVlNWUxMzZjZWYxODNhNDBhOTFkYzc2ZWE0IiwiaW50ZXJuYWxfc2VjcmV0IjoiYmE4NGU1MjktOWYyNC00MTZmLWJlMzctNDlhNjI5NjY2OTdhIn0.4dMq4S602xsDbmWrgPViyJY1cLr84mtIqMPW6fqG9kM`
+### Step-by-Step:
+
+1. Go to [vercel.com/dashboard](https://vercel.com/dashboard)
+2. Select your project
+3. Go to **Settings** → **Environment Variables**
+4. Add these three variables (for **Production**, **Preview**, and **Development**):
+
+#### Required Variables:
+```
+DATABASE_URL
+postgres://2735c59a6f6f1e22da9d8e47d1223222476db1ee5e136cef183a40a91dc76ea4:sk_p3tdRQir1MdSx5T-2WoGN@db.prisma.io:5432/postgres?sslmode=require
+
+POSTGRES_URL  
+postgres://2735c59a6f6f1e22da9d8e47d1223222476db1ee5e136cef183a40a91dc76ea4:sk_p3tdRQir1MdSx5T-2WoGN@db.prisma.io:5432/postgres?sslmode=require
+
+PRISMA_DATABASE_URL
+prisma+postgres://accelerate.prisma-data.net/?api_key=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqd3RfaWQiOjEsInNlY3VyZV9rZXkiOiJza19wM3RkUlFpcjFNZFN4NVQtMldvR04iLCJhcGlfa2V5IjoiMDFLRlBIMTdDS0RTMkU0MUZKQ1daSDJKS0UiLCJ0ZW5hbnRfaWQiOiIyNzM1YzU5YTZmNmYxZTIyZGE5ZDhlNDdkMTIyMzIyMjQ3NmRiMWVlNWUxMzZjZWYxODNhNDBhOTFkYzc2ZWE0IiwiaW50ZXJuYWxfc2VjcmV0IjoiYmE4NGU1MjktOWYyNC00MTZmLWJlMzctNDlhNjI5NjY2OTdhIn0.4dMq4S602xsDbmWrgPViyJY1cLr84mtIqMPW6fqG9kM
+```
 
 ## Deployment Steps
 
