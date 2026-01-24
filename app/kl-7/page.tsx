@@ -57,6 +57,7 @@ export default function KL7Page() {
   const [editingRow, setEditingRow] = useState<Delivery | null>(null)
   const [codeError, setCodeError] = useState<string>('')
   const [deliveryData, setDeliveryData] = useState<Delivery[]>([])
+  const [newRowIds, setNewRowIds] = useState<Set<number>>(new Set()) // Track new row IDs
 
   useEffect(() => {
     showPageLoading("Opening Route KL-7", 800)
@@ -115,11 +116,14 @@ export default function KL7Page() {
       }
       
       try {
-        // Add to pending changes instead of immediate save
+        // Check if this is a new row
+        const isNewRow = newRowIds.has(editingRow.id)
+        
+        // Add to pending changes with correct type
         addPendingChange({
           id: editingRow.id,
-          type: 'update',
-          data: editingRow
+          type: isNewRow ? 'create' : 'update',
+          data: isNewRow ? { ...editingRow, routeId: deliveryData[0]?.routeId || 1 } : editingRow
         })
 
         // Update local state immediately for UI feedback
@@ -159,6 +163,9 @@ export default function KL7Page() {
   const handleAddRow = (row: Delivery) => {
     // Fetch first delivery to get routeId
     const routeId = deliveryData[0]?.routeId || 1 // Default to 1 if no data
+    
+    // Track this as a new row
+    setNewRowIds((prev) => new Set(prev).add(row.id))
     
     // Add to pending changes as CREATE
     addPendingChange({

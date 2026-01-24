@@ -30,6 +30,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
@@ -664,12 +671,22 @@ export function DataTable({ data, onLocationClick, onEditRow, onDeleteRow, onAdd
             </div>
             <div className="space-y-2">
               <Label htmlFor="delivery">Delivery</Label>
-              <Input
-                id="delivery"
+              <Select
                 value={newRowData.delivery}
-                onChange={(e) => setNewRowData({ ...newRowData, delivery: e.target.value })}
-                placeholder="Enter delivery"
-              />
+                onValueChange={(value) => setNewRowData({ ...newRowData, delivery: value })}
+              >
+                <SelectTrigger id="delivery">
+                  <SelectValue placeholder="Select delivery type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Daily">Daily</SelectItem>
+                  <SelectItem value="Weekday">Weekday</SelectItem>
+                  <SelectItem value="Alt 1">Alt 1</SelectItem>
+                  <SelectItem value="Alt 2">Alt 2</SelectItem>
+                  <SelectItem value="Weekly">Weekly</SelectItem>
+                  <SelectItem value="Monthly">Monthly</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <DialogFooter>
