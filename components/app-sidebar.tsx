@@ -300,9 +300,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       
       // Redirect to new route
       window.location.href = `/${routeSlug}`
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error creating route:', error)
-      alert(error.message || 'Failed to create route. Please try again.')
+      const message = error instanceof Error ? error.message : 'Failed to create route. Please try again.'
+      alert(message)
     } finally {
       setIsAddingRoute(false)
     }

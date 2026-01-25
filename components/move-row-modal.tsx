@@ -50,7 +50,6 @@ export function MoveRowModal({
   open,
   onOpenChange,
   currentRouteSlug,
-  currentRouteId: _currentRouteId,
   allData,
   onMoveComplete,
 }: MoveRowModalProps) {
