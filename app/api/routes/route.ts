@@ -26,11 +26,54 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { name, slug, description } = body
 
+    // Validate required fields
+    if (!name || !slug) {
+      return NextResponse.json(
+        { error: 'Name and slug are required' },
+        { status: 400 }
+      )
+    }
+
+    // Validate slug format
+    const slugRegex = /^[a-z0-9-]+$/
+    if (!slugRegex.test(slug)) {
+      return NextResponse.json(
+        { error: 'Slug must contain only lowercase letters, numbers, and hyphens' },
+        { status: 400 }
+      )
+    }
+
+    // Check if route already exists
+    const existing = await prisma.route.findFirst({
+      where: {
+        OR: [
+          { slug },
+          { name }
+        ]
+      }
+    })
+
+    if (existing) {
+      if (existing.slug === slug) {
+        return NextResponse.json(
+          { error: `A route with slug "${slug}" already exists` },
+          { status: 409 }
+        )
+      }
+      if (existing.name === name) {
+        return NextResponse.json(
+          { error: `A route with name "${name}" already exists` },
+          { status: 409 }
+        )
+      }
+    }
+
+    // Create the route
     const route = await prisma.route.create({
       data: {
-        name,
-        slug,
-        description
+        name: name.trim(),
+        slug: slug.trim(),
+        description: description?.trim() || null
       }
     })
 
@@ -38,7 +81,7 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     console.error('Error creating route:', error)
     
-    // Handle unique constraint violation
+    // Handle unique constraint violation (backup check)
     if (error.code === 'P2002') {
       const field = error.meta?.target?.[0] || 'field'
       return NextResponse.json(

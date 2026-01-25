@@ -81,7 +81,7 @@ const data = {
       items: [],
     },
     {
-      title: "Route Vm KL",
+      title: "Route VM",
       url: "#",
       icon: MapPin,
       items: [
@@ -89,13 +89,6 @@ const data = {
           title: "KL 7 - 3PVK04",
           url: "/kl-7",
         },
-      ],
-    },
-    {
-      title: "Route Vm SL",
-      url: "#",
-      icon: Navigation,
-      items: [
         {
           title: "SL 1 - 3AVS01",
           url: "/sl-1",
@@ -122,20 +115,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         
         const routes = await response.json()
         
-        // Group routes by KL and SL
-        const klRoutes = routes
-          .filter((route: Route) => route.slug.startsWith('kl-'))
-          .map((route: Route) => ({
-            title: route.name,
-            url: `/${route.slug}`,
-          }))
-        
-        const slRoutes = routes
-          .filter((route: Route) => route.slug.startsWith('sl-'))
-          .map((route: Route) => ({
-            title: route.name,
-            url: `/${route.slug}`,
-          }))
+        // Get all routes (both KL and SL)
+        const allRoutes = routes.map((route: Route) => ({
+          title: route.name,
+          url: `/${route.slug}`,
+        }))
         
         // Update nav data with fetched routes - preserve icons from initial data
         setNavData(prevData => [
@@ -145,11 +129,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           },
           {
             ...prevData[1],
-            items: klRoutes,
-          },
-          {
-            ...prevData[2],
-            items: slRoutes,
+            items: allRoutes,
           },
         ])
       } catch (error) {
@@ -187,6 +167,43 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const [routeDescription, setRouteDescription] = React.useState("")
   const [isAddingRoute, setIsAddingRoute] = React.useState(false)
   const [addRouteSlugError, setAddRouteSlugError] = React.useState("")
+  const [isCheckingSlug, setIsCheckingSlug] = React.useState(false)
+
+  // Debounced slug availability check
+  const checkSlugAvailability = React.useCallback(async (slug: string) => {
+    if (!slug || slug.length < 2) return
+    
+    setIsCheckingSlug(true)
+    try {
+      const response = await fetch(`/api/routes/check-duplicate?slug=${encodeURIComponent(slug)}`)
+      if (response.ok) {
+        const { exists, existingRoute } = await response.json()
+        if (exists) {
+          setAddRouteSlugError(`❌ Slug already used by "${existingRoute.name}"`)
+        } else {
+          setAddRouteSlugError("") // Clear error if slug is available
+        }
+      }
+    } catch (error) {
+      console.error('Error checking slug:', error)
+    } finally {
+      setIsCheckingSlug(false)
+    }
+  }, [])
+
+  // Debounce slug check
+  React.useEffect(() => {
+    if (!routeSlug) {
+      setAddRouteSlugError("")
+      return
+    }
+    
+    const timer = setTimeout(() => {
+      checkSlugAvailability(routeSlug)
+    }, 500) // Wait 500ms after user stops typing
+    
+    return () => clearTimeout(timer)
+  }, [routeSlug, checkSlugAvailability])
 
   // Apply color theme to document
   React.useEffect(() => {
@@ -252,7 +269,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   
   const handleAddRoute = async () => {
     if (!routeName.trim() || !routeSlug.trim()) {
-      alert("Please fill in Route Name and Slug")
+      setAddRouteSlugError("Please fill in Route Name and Slug")
       return
     }
     
@@ -263,26 +280,31 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       return
     }
     
-    // Validate slug prefix based on parent route
-    const slugPrefix = selectedParentRoute.includes("KL") ? "kl-" : "sl-"
-    if (!routeSlug.startsWith(slugPrefix)) {
-      setAddRouteSlugError(`Slug must start with "${slugPrefix}" for ${selectedParentRoute}`)
-      return
-    }
-    
     setIsAddingRoute(true)
     setAddRouteSlugError("")
     
     try {
+      // Check for duplicate slug before creating
+      const checkResponse = await fetch(`/api/routes/check-duplicate?slug=${encodeURIComponent(routeSlug)}`)
+      if (checkResponse.ok) {
+        const { exists, existingRoute } = await checkResponse.json()
+        if (exists) {
+          setAddRouteSlugError(`Slug "${routeSlug}" is already used by "${existingRoute.name}"`)
+          setIsAddingRoute(false)
+          return
+        }
+      }
+      
+      // Create the route
       const response = await fetch('/api/routes', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          name: routeName,
-          slug: routeSlug,
-          description: routeDescription,
+          name: routeName.trim(),
+          slug: routeSlug.trim(),
+          description: routeDescription.trim() || null,
         }),
       })
       
@@ -291,6 +313,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         throw new Error(error.error || 'Failed to create route')
       }
       
+      const newRoute = await response.json()
+      
       // Reset form
       setRouteName("")
       setRouteSlug("")
@@ -298,12 +322,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       setAddRouteSlugError("")
       setAddRouteOpen(false)
       
+      // Show success message and redirect
+      alert(`✅ Route "${newRoute.name}" created successfully! Redirecting...`)
+      
       // Redirect to new route
-      window.location.href = `/${routeSlug}`
+      setTimeout(() => {
+        window.location.href = `/${routeSlug}`
+      }, 1000)
     } catch (error: unknown) {
       console.error('Error creating route:', error)
       const message = error instanceof Error ? error.message : 'Failed to create route. Please try again.'
-      alert(message)
+      setAddRouteSlugError(message)
     } finally {
       setIsAddingRoute(false)
     }
@@ -367,8 +396,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                               </SidebarMenuSubButton>
                             </SidebarMenuSubItem>
                           ))}
-                          {/* Add Route Button - Only show in edit mode for KL and SL routes */}
-                          {isEditMode && (item.title === "Route Vm KL" || item.title === "Route Vm SL") && (
+                          {/* Add Route Button - Only show in edit mode for Route VM */}
+                          {isEditMode && item.title === "Route VM" && (
                             <SidebarMenuSubItem>
                               <SidebarMenuSubButton 
                                 onClick={() => openAddRouteDialog(item.title)}
@@ -868,7 +897,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <div className="space-y-4 py-4">
             <div className="rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 p-3">
               <p className="text-sm text-blue-800 dark:text-blue-200">
-                <strong>Note:</strong> The new route will use the same page template and automatically load data from the database based on its slug.
+                <strong>💡 Tip:</strong> Your route name will auto-generate a URL slug. The page will automatically load data from the database using this slug.
               </p>
             </div>
             <div className="space-y-2">
@@ -883,12 +912,19 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   
                   // Auto-generate slug from name
                   if (name) {
-                    // Extract route number from name (e.g., "KL 8" -> "kl-8")
-                    const match = name.match(/(KL|SL)\s*(\d+)/i)
+                    // Extract route pattern from name (e.g., "KL 8" -> "kl-8" or "VM 10" -> "vm-10")
+                    const match = name.match(/([A-Z]+)\s*(\d+)/i)
                     if (match) {
                       const prefix = match[1].toLowerCase()
                       const number = match[2]
                       setRouteSlug(`${prefix}-${number}`)
+                    } else {
+                      // Fallback: convert to slug format
+                      const slug = name
+                        .toLowerCase()
+                        .replace(/[^a-z0-9]+/g, '-')
+                        .replace(/^-+|-+$/g, '')
+                      setRouteSlug(slug)
                     }
                   }
                 }}
@@ -896,7 +932,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="routeSlug" className={addRouteSlugError ? 'text-destructive' : ''}>Route Slug (URL) *</Label>
+              <Label htmlFor="routeSlug" className={addRouteSlugError ? 'text-destructive' : ''}>
+                Route Slug (URL) * {isCheckingSlug && <span className="text-muted-foreground text-xs">(checking...)</span>}
+              </Label>
               <Input
                 id="routeSlug"
                 placeholder="e.g., kl-8 or sl-2"
@@ -904,7 +942,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 onChange={(e) => {
                   const slug = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-')
                   setRouteSlug(slug)
-                  setAddRouteSlugError('')
+                  // Clear error immediately on change, will recheck after debounce
+                  if (addRouteSlugError.startsWith('❌')) {
+                    setAddRouteSlugError('')
+                  }
                 }}
                 disabled={isAddingRoute}
                 className={addRouteSlugError ? 'border-destructive' : ''}
@@ -913,7 +954,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 <p className="text-sm text-destructive font-medium">{addRouteSlugError}</p>
               ) : (
                 <p className="text-xs text-muted-foreground">
-                  URL format: /{routeSlug || 'your-slug'}. Must start with {selectedParentRoute.includes("KL") ? '"kl-"' : '"sl-"'}
+                  URL will be: /{routeSlug || 'your-slug'}. Use lowercase letters, numbers, and hyphens only.
                 </p>
               )}
             </div>
@@ -933,7 +974,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               variant="outline" 
               onClick={() => {
                 setAddRouteOpen(false)
-                setAddRouteSlugError('')
+                setRouteName("")
+                setRouteSlug("")
+                setRouteDescription("")
+                setAddRouteSlugError("")
               }}
               disabled={isAddingRoute}
             >
@@ -941,7 +985,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </Button>
             <Button 
               onClick={handleAddRoute}
-              disabled={isAddingRoute || !routeName.trim() || !routeSlug.trim() || !!addRouteSlugError}
+              disabled={isAddingRoute || isCheckingSlug || !routeName.trim() || !routeSlug.trim() || !!addRouteSlugError}
               className="bg-green-600 hover:bg-green-700"
             >
               {isAddingRoute ? (
