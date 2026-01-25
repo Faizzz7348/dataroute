@@ -186,6 +186,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const [routeSlug, setRouteSlug] = React.useState("")
   const [routeDescription, setRouteDescription] = React.useState("")
   const [isAddingRoute, setIsAddingRoute] = React.useState(false)
+  const [addRouteSlugError, setAddRouteSlugError] = React.useState("")
 
   // Apply color theme to document
   React.useEffect(() => {
@@ -255,7 +256,23 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       return
     }
     
+    // Validate slug format
+    const slugRegex = /^[a-z0-9-]+$/
+    if (!slugRegex.test(routeSlug)) {
+      setAddRouteSlugError("Slug must contain only lowercase letters, numbers, and hyphens")
+      return
+    }
+    
+    // Validate slug prefix based on parent route
+    const slugPrefix = selectedParentRoute.includes("KL") ? "kl-" : "sl-"
+    if (!routeSlug.startsWith(slugPrefix)) {
+      setAddRouteSlugError(`Slug must start with "${slugPrefix}" for ${selectedParentRoute}`)
+      return
+    }
+    
     setIsAddingRoute(true)
+    setAddRouteSlugError("")
+    
     try {
       const response = await fetch('/api/routes', {
         method: 'POST',
@@ -270,20 +287,22 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       })
       
       if (!response.ok) {
-        throw new Error('Failed to create route')
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to create route')
       }
       
       // Reset form
       setRouteName("")
       setRouteSlug("")
       setRouteDescription("")
+      setAddRouteSlugError("")
       setAddRouteOpen(false)
       
-      // Reload to show new route
-      window.location.reload()
-    } catch (error) {
+      // Redirect to new route
+      window.location.href = `/${routeSlug}`
+    } catch (error: any) {
       console.error('Error creating route:', error)
-      alert('Failed to create route. Please try again.')
+      alert(error.message || 'Failed to create route. Please try again.')
     } finally {
       setIsAddingRoute(false)
     }
@@ -840,34 +859,62 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <Dialog open={addRouteOpen} onOpenChange={setAddRouteOpen}>
         <DialogContent className="backdrop-blur-sm">
           <DialogHeader>
-            <DialogTitle>Add New Route</DialogTitle>
+            <DialogTitle>Add New Route to {selectedParentRoute}</DialogTitle>
             <DialogDescription>
-              Add a new submenu to {selectedParentRoute}
+              Create a new route that will appear in the {selectedParentRoute} menu
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
+            <div className="rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 p-3">
+              <p className="text-sm text-blue-800 dark:text-blue-200">
+                <strong>Note:</strong> The new route will use the same page template and automatically load data from the database based on its slug.
+              </p>
+            </div>
             <div className="space-y-2">
               <Label htmlFor="routeName">Route Name *</Label>
               <Input
                 id="routeName"
-                placeholder="e.g., KL 8 - 3PVK05"
+                placeholder="e.g., KL 8 - 3PVK05 or SL 2 - 3AVS02"
                 value={routeName}
-                onChange={(e) => setRouteName(e.target.value)}
+                onChange={(e) => {
+                  const name = e.target.value
+                  setRouteName(name)
+                  
+                  // Auto-generate slug from name
+                  if (name) {
+                    // Extract route number from name (e.g., "KL 8" -> "kl-8")
+                    const match = name.match(/(KL|SL)\s*(\d+)/i)
+                    if (match) {
+                      const prefix = match[1].toLowerCase()
+                      const number = match[2]
+                      setRouteSlug(`${prefix}-${number}`)
+                    }
+                  }
+                }}
                 disabled={isAddingRoute}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="routeSlug">Route Slug (URL) *</Label>
+              <Label htmlFor="routeSlug" className={addRouteSlugError ? 'text-destructive' : ''}>Route Slug (URL) *</Label>
               <Input
                 id="routeSlug"
-                placeholder="e.g., kl-8"
+                placeholder="e.g., kl-8 or sl-2"
                 value={routeSlug}
-                onChange={(e) => setRouteSlug(e.target.value.toLowerCase())}
+                onChange={(e) => {
+                  const slug = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-')
+                  setRouteSlug(slug)
+                  setAddRouteSlugError('')
+                }}
                 disabled={isAddingRoute}
+                className={addRouteSlugError ? 'border-destructive' : ''}
               />
-              <p className="text-xs text-muted-foreground">
-                This will be used in the URL. Use lowercase and hyphens only.
-              </p>
+              {addRouteSlugError ? (
+                <p className="text-sm text-destructive font-medium">{addRouteSlugError}</p>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  URL format: /{routeSlug || 'your-slug'}. Must start with {selectedParentRoute.includes("KL") ? '"kl-"' : '"sl-"'}
+                </p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="routeDescription">Description (Optional)</Label>
@@ -883,25 +930,28 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <DialogFooter className="gap-2">
             <Button 
               variant="outline" 
-              onClick={() => setAddRouteOpen(false)}
+              onClick={() => {
+                setAddRouteOpen(false)
+                setAddRouteSlugError('')
+              }}
               disabled={isAddingRoute}
             >
               Cancel
             </Button>
             <Button 
               onClick={handleAddRoute}
-              disabled={isAddingRoute || !routeName.trim() || !routeSlug.trim()}
+              disabled={isAddingRoute || !routeName.trim() || !routeSlug.trim() || !!addRouteSlugError}
               className="bg-green-600 hover:bg-green-700"
             >
               {isAddingRoute ? (
                 <span className="flex items-center gap-2">
                   <span className="animate-spin">⏳</span>
-                  Adding...
+                  Creating Route...
                 </span>
               ) : (
                 <>
                   <Plus className="h-4 w-4 mr-2" />
-                  Add Route
+                  Create Route
                 </>
               )}
             </Button>

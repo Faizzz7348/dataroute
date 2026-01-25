@@ -158,6 +158,7 @@ export function DataTable({ data, onLocationClick, onEditRow, onDeleteRow, onAdd
   ])
   const [duplicateCodes, setDuplicateCodes] = React.useState<Map<number, Array<{id: number, location: string, routeName: string, routeSlug: string}>>>(new Map())
   const [settingsDropdownOpen, setSettingsDropdownOpen] = React.useState(false)
+  const duplicateCheckTimeoutRef = React.useRef<NodeJS.Timeout | null>(null)
 
   React.useEffect(() => {
     const fetchRouteInfo = async () => {
@@ -809,40 +810,46 @@ export function DataTable({ data, onLocationClick, onEditRow, onDeleteRow, onAdd
                 id="code"
                 type="number"
                 value={newRowData.code}
-                onChange={async (e) => {
+                onChange={(e) => {
                   const code = e.target.value
                   setNewRowData({ ...newRowData, code })
                   
+                  // Clear previous timeout
+                  if (duplicateCheckTimeoutRef.current) {
+                    clearTimeout(duplicateCheckTimeoutRef.current)
+                  }
+                  
+                  // Clear error immediately when typing
+                  setNewRowCodeError('')
+                  
                   if (code && !isNaN(parseInt(code))) {
-                    setCheckingNewRowDuplicate(true)
-                    try {
-                      const params = new URLSearchParams({
-                        code: code
-                      })
-                      
-                      const response = await fetch(`/api/locations/check-duplicate?${params}`)
-                      if (response.ok) {
-                        const result = await response.json()
-                        if (result.hasDuplicate) {
-                          const duplicateInfo = result.duplicates.map((d: any) => 
-                            `"${d.location}" in ${d.routeName}`
-                          ).join(', ')
-                          setNewRowCodeError(`Code ${code} already exists in: ${duplicateInfo}`)
-                        } else {
-                          setNewRowCodeError('')
+                    // Debounce duplicate check - wait 500ms after user stops typing
+                    duplicateCheckTimeoutRef.current = setTimeout(async () => {
+                      setCheckingNewRowDuplicate(true)
+                      try {
+                        const params = new URLSearchParams({
+                          code: code
+                        })
+                        
+                        const response = await fetch(`/api/locations/check-duplicate?${params}`)
+                        if (response.ok) {
+                          const result = await response.json()
+                          if (result.hasDuplicate) {
+                            const duplicateInfo = result.duplicates.map((d: any) => 
+                              `"${d.location}" in ${d.routeName}`
+                            ).join(', ')
+                            setNewRowCodeError(`Code ${code} already exists in: ${duplicateInfo}`)
+                          }
                         }
+                      } catch (error) {
+                        console.error('Error checking duplicate:', error)
                       }
-                    } catch (error) {
-                      console.error('Error checking duplicate:', error)
-                    }
-                    setCheckingNewRowDuplicate(false)
-                  } else {
-                    setNewRowCodeError('')
+                      setCheckingNewRowDuplicate(false)
+                    }, 500)
                   }
                 }}
                 placeholder="Enter code"
                 className={newRowCodeError ? 'border-destructive focus-visible:ring-destructive' : ''}
-                disabled={checkingNewRowDuplicate}
               />
               {checkingNewRowDuplicate && (
                 <p className="text-sm text-muted-foreground flex items-center gap-1">

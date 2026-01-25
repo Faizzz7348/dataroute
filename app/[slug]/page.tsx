@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useParams } from "next/navigation"
 import Link from "next/link"
 import { AppSidebar } from "@/components/app-sidebar"
@@ -73,6 +73,7 @@ export default function RoutePage() {
   const [routeName, setRouteName] = useState<string>('')
   const [notFound, setNotFound] = useState(false)
   const [checkingDuplicate, setCheckingDuplicate] = useState(false)
+  const duplicateCheckTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
     showPageLoading(`Opening Route ${slug.toUpperCase()}`, 800)
@@ -398,27 +399,34 @@ export default function RoutePage() {
                     id="code"
                     type="number"
                     value={editingRow.code}
-                    onChange={async (e) => {
+                    onChange={(e) => {
                       const newCode = parseInt(e.target.value) || 0
                       setEditingRow({ ...editingRow, code: newCode })
                       
-                      // Check for duplicates
-                      setCheckingDuplicate(true)
-                      const duplicateCheck = await checkDuplicateCode(newCode, editingRow.id)
-                      setCheckingDuplicate(false)
-                      
-                      if (duplicateCheck.hasDuplicate) {
-                        const duplicateInfo = duplicateCheck.duplicates.map(d => 
-                          `"${d.location}" in ${d.routeName}`
-                        ).join(', ')
-                        setCodeError(`Code ${newCode} already exists in: ${duplicateInfo}`)
-                      } else {
-                        setCodeError('')
+                      // Clear previous timeout
+                      if (duplicateCheckTimeoutRef.current) {
+                        clearTimeout(duplicateCheckTimeoutRef.current)
                       }
+                      
+                      // Clear error immediately when typing
+                      setCodeError('')
+                      
+                      // Debounce duplicate check - wait 500ms after user stops typing
+                      duplicateCheckTimeoutRef.current = setTimeout(async () => {
+                        setCheckingDuplicate(true)
+                        const duplicateCheck = await checkDuplicateCode(newCode, editingRow.id)
+                        setCheckingDuplicate(false)
+                        
+                        if (duplicateCheck.hasDuplicate) {
+                          const duplicateInfo = duplicateCheck.duplicates.map(d => 
+                            `"${d.location}" in ${d.routeName}`
+                          ).join(', ')
+                          setCodeError(`Code ${newCode} already exists in: ${duplicateInfo}`)
+                        }
+                      }, 500)
                     }}
                     placeholder="Enter code"
                     className={codeError ? 'border-destructive focus-visible:ring-destructive' : ''}
-                    disabled={checkingDuplicate}
                   />
                   {checkingDuplicate && (
                     <p className="text-sm text-muted-foreground flex items-center gap-1">
