@@ -65,6 +65,7 @@ export default function KL7Page() {
   const [codeError, setCodeError] = useState<string>('')
   const [deliveryData, setDeliveryData] = useState<Delivery[]>([])
   const [newRowIds, setNewRowIds] = useState<Set<number>>(new Set()) // Track new row IDs
+  const [routeId, setRouteId] = useState<number>(1) // Track the route ID
 
   useEffect(() => {
     showPageLoading("Opening Route KL-7", 800)
@@ -79,6 +80,10 @@ export default function KL7Page() {
         if (response.ok) {
           const data = await response.json()
           setDeliveryData(data.sort((a: Delivery, b: Delivery) => a.code - b.code))
+          // Set routeId from the first item
+          if (data.length > 0) {
+            setRouteId(data[0].routeId)
+          }
         }
       } catch (error) {
         console.error('Error fetching locations:', error)
@@ -206,6 +211,19 @@ export default function KL7Page() {
     }
   }
 
+  // Function to handle move complete - refresh data
+  const handleMoveComplete = async () => {
+    try {
+      const response = await fetch('/api/routes/kl-7/locations')
+      if (response.ok) {
+        const data = await response.json()
+        setDeliveryData(data.sort((a: Delivery, b: Delivery) => a.code - b.code))
+      }
+    } catch (error) {
+      console.error('Error refreshing locations:', error)
+    }
+  }
+
   if (!mounted) return null
 
   return (
@@ -291,6 +309,9 @@ export default function KL7Page() {
                 onDeleteRow={handleDeleteRow}
                 onAddRow={handleAddRow}
                 onPowerModeChange={handlePowerModeChange}
+                onMoveComplete={handleMoveComplete}
+                currentRouteSlug="kl-7"
+                currentRouteId={routeId}
                 showMap={showMap} 
               />
             </div>

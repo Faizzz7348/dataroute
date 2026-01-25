@@ -44,6 +44,7 @@ import { Input } from "@/components/ui/input"
 import { Delivery } from "@/app/data"
 import { PowerModeModal } from "@/components/power-mode-modal"
 import { InfoModal } from "@/components/info-modal"
+import { MoveRowModal } from "@/components/move-row-modal"
 import { useEditMode } from "@/contexts/edit-mode-context"
 
 // Helper functions untuk check power mode status
@@ -119,10 +120,13 @@ interface DataTableProps {
   onDeleteRow?: (rowId: number) => Promise<void>
   onAddRow?: (row: Delivery) => void
   onPowerModeChange?: (rowId: number, powerMode: string | null) => void
+  onMoveComplete?: () => void
+  currentRouteSlug?: string
+  currentRouteId?: number
   showMap?: boolean
 }
 
-export function DataTable({ data, onLocationClick, onEditRow, onDeleteRow, onAddRow, onPowerModeChange, showMap = true }: DataTableProps) {
+export function DataTable({ data, onLocationClick, onEditRow, onDeleteRow, onAddRow, onPowerModeChange, onMoveComplete, currentRouteSlug, currentRouteId, showMap = true }: DataTableProps) {
   'use no memo'
   
   const { isEditMode } = useEditMode()
@@ -130,6 +134,7 @@ export function DataTable({ data, onLocationClick, onEditRow, onDeleteRow, onAdd
   const [columnDialogOpen, setColumnDialogOpen] = React.useState(false)
   const [rowDialogOpen, setRowDialogOpen] = React.useState(false)
   const [addRowDialogOpen, setAddRowDialogOpen] = React.useState(false)
+  const [moveRowModalOpen, setMoveRowModalOpen] = React.useState(false)
   const [powerModalOpen, setPowerModalOpen] = React.useState(false)
   const [selectedPowerRow, setSelectedPowerRow] = React.useState<Delivery | null>(null)
   const [infoModalOpen, setInfoModalOpen] = React.useState(false)
@@ -516,12 +521,14 @@ export function DataTable({ data, onLocationClick, onEditRow, onDeleteRow, onAdd
                   >
                     Add New Row
                   </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => openRowDialog()}
-                    className="cursor-pointer"
-                  >
-                    Move Row
-                  </DropdownMenuItem>
+                  {currentRouteSlug && currentRouteId && (
+                    <DropdownMenuItem
+                      onClick={() => setMoveRowModalOpen(true)}
+                      className="cursor-pointer"
+                    >
+                      Move Rows
+                    </DropdownMenuItem>
+                  )}
                 </>
               )}
             </DropdownMenuContent>
@@ -924,6 +931,21 @@ export function DataTable({ data, onLocationClick, onEditRow, onDeleteRow, onAdd
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Move Row Modal */}
+      {currentRouteSlug && currentRouteId && (
+        <MoveRowModal
+          open={moveRowModalOpen}
+          onOpenChange={setMoveRowModalOpen}
+          currentRouteSlug={currentRouteSlug}
+          currentRouteId={currentRouteId}
+          allData={tableData}
+          onMoveComplete={() => {
+            // Call parent callback to refresh data
+            onMoveComplete?.()
+          }}
+        />
+      )}
     </div>
   )
 }

@@ -49,6 +49,26 @@ import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { Switch } from "@/components/ui/switch"
 
+interface NavItem {
+  title: string
+  url: string
+}
+
+interface NavMain {
+  title: string
+  url: string
+  items: NavItem[]
+}
+
+interface Route {
+  id: number
+  name: string
+  slug: string
+  description: string | null
+  createdAt: string
+  updatedAt: string
+}
+
 // This is sample data.
 const data = {
   navMain: [
@@ -84,6 +104,58 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { isEditMode, setIsEditMode, isLoading, setIsLoading, hasUnsavedChanges, saveAllChanges, pendingChanges, savingMessage } = useEditMode()
   const { theme, setTheme } = useTheme()
   const [colorTheme, setColorTheme] = React.useState<string>("default")
+  const [navData, setNavData] = React.useState<NavMain[]>(data.navMain)
+  
+  // Fetch routes from database
+  React.useEffect(() => {
+    const fetchRoutes = async () => {
+      try {
+        const response = await fetch('/api/routes')
+        if (!response.ok) throw new Error('Failed to fetch routes')
+        
+        const routes = await response.json()
+        
+        // Group routes by KL and SL
+        const klRoutes = routes
+          .filter((route: Route) => route.slug.startsWith('kl-'))
+          .map((route: Route) => ({
+            title: route.name,
+            url: `/${route.slug}`,
+          }))
+        
+        const slRoutes = routes
+          .filter((route: Route) => route.slug.startsWith('sl-'))
+          .map((route: Route) => ({
+            title: route.name,
+            url: `/${route.slug}`,
+          }))
+        
+        // Update nav data with fetched routes
+        setNavData([
+          {
+            title: "Home",
+            url: "/",
+            items: [],
+          },
+          {
+            title: "Route Vm KL",
+            url: "#",
+            items: klRoutes,
+          },
+          {
+            title: "Route Vm SL",
+            url: "#",
+            items: slRoutes,
+          },
+        ])
+      } catch (error) {
+        console.error('Error fetching routes:', error)
+        // Keep default data if fetch fails
+      }
+    }
+    
+    fetchRoutes()
+  }, [])
   
   // Debug log
   React.useEffect(() => {
@@ -97,11 +169,19 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const [helpOpen, setHelpOpen] = React.useState(false)
   const [saveConfirmOpen, setSaveConfirmOpen] = React.useState(false)
   const [editModeOffConfirm, setEditModeOffConfirm] = React.useState(false)
+  const [addRouteOpen, setAddRouteOpen] = React.useState(false)
+  const [selectedParentRoute, setSelectedParentRoute] = React.useState<string>("")
   
   // Notification settings
   const [emailNotifs, setEmailNotifs] = React.useState(true)
   const [pushNotifs, setPushNotifs] = React.useState(true)
   const [updateNotifs, setUpdateNotifs] = React.useState(false)
+  
+  // Add route form state
+  const [routeName, setRouteName] = React.useState("")
+  const [routeSlug, setRouteSlug] = React.useState("")
+  const [routeDescription, setRouteDescription] = React.useState("")
+  const [isAddingRoute, setIsAddingRoute] = React.useState(false)
 
   // Apply color theme to document
   React.useEffect(() => {
@@ -164,6 +244,51 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       // You can add toast notification here
     }
   }
+  
+  const handleAddRoute = async () => {
+    if (!routeName.trim() || !routeSlug.trim()) {
+      alert("Please fill in Route Name and Slug")
+      return
+    }
+    
+    setIsAddingRoute(true)
+    try {
+      const response = await fetch('/api/routes', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: routeName,
+          slug: routeSlug,
+          description: routeDescription,
+        }),
+      })
+      
+      if (!response.ok) {
+        throw new Error('Failed to create route')
+      }
+      
+      // Reset form
+      setRouteName("")
+      setRouteSlug("")
+      setRouteDescription("")
+      setAddRouteOpen(false)
+      
+      // Reload to show new route
+      window.location.reload()
+    } catch (error) {
+      console.error('Error creating route:', error)
+      alert('Failed to create route. Please try again.')
+    } finally {
+      setIsAddingRoute(false)
+    }
+  }
+  
+  const openAddRouteDialog = (parentTitle: string) => {
+    setSelectedParentRoute(parentTitle)
+    setAddRouteOpen(true)
+  }
 
   return (
     <Sidebar {...props}>
@@ -190,7 +315,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <SidebarContent className="flex-1 overflow-y-auto min-h-0">
           <SidebarGroup>
             <SidebarMenu>
-              {data.navMain.map((item) => (
+              {navData.map((item) => (
                 item.items?.length ? (
                   <Collapsible
                     key={item.title}
@@ -214,6 +339,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                               </SidebarMenuSubButton>
                             </SidebarMenuSubItem>
                           ))}
+                          {/* Add Route Button - Only show in edit mode for KL and SL routes */}
+                          {isEditMode && (item.title === "Route Vm KL" || item.title === "Route Vm SL") && (
+                            <SidebarMenuSubItem>
+                              <SidebarMenuSubButton 
+                                onClick={() => openAddRouteDialog(item.title)}
+                                className="cursor-pointer text-green-600 dark:text-green-400 hover:bg-green-500/10"
+                              >
+                                <Plus className="h-4 w-4 mr-2" />
+                                Add New Route
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                          )}
                         </SidebarMenuSub>
                       </CollapsibleContent>
                     </SidebarMenuItem>
@@ -680,6 +817,79 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               variant="destructive"
             >
               {isLoading ? "Discarding..." : "Discard Changes"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Add Route Dialog */}
+      <Dialog open={addRouteOpen} onOpenChange={setAddRouteOpen}>
+        <DialogContent className="backdrop-blur-sm">
+          <DialogHeader>
+            <DialogTitle>Add New Route</DialogTitle>
+            <DialogDescription>
+              Add a new submenu to {selectedParentRoute}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="routeName">Route Name *</Label>
+              <Input
+                id="routeName"
+                placeholder="e.g., KL 8 - 3PVK05"
+                value={routeName}
+                onChange={(e) => setRouteName(e.target.value)}
+                disabled={isAddingRoute}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="routeSlug">Route Slug (URL) *</Label>
+              <Input
+                id="routeSlug"
+                placeholder="e.g., kl-8"
+                value={routeSlug}
+                onChange={(e) => setRouteSlug(e.target.value.toLowerCase())}
+                disabled={isAddingRoute}
+              />
+              <p className="text-xs text-muted-foreground">
+                This will be used in the URL. Use lowercase and hyphens only.
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="routeDescription">Description (Optional)</Label>
+              <Input
+                id="routeDescription"
+                placeholder="Route description"
+                value={routeDescription}
+                onChange={(e) => setRouteDescription(e.target.value)}
+                disabled={isAddingRoute}
+              />
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => setAddRouteOpen(false)}
+              disabled={isAddingRoute}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleAddRoute}
+              disabled={isAddingRoute || !routeName.trim() || !routeSlug.trim()}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              {isAddingRoute ? (
+                <span className="flex items-center gap-2">
+                  <span className="animate-spin">⏳</span>
+                  Adding...
+                </span>
+              ) : (
+                <>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Route
+                </>
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

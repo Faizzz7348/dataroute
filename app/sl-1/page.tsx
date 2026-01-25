@@ -65,6 +65,7 @@ export default function SL1Page() {
   const [codeError, setCodeError] = useState<string>('')
   const [deliveryData, setDeliveryData] = useState<Delivery[]>([])
   const [newRowIds, setNewRowIds] = useState<Set<number>>(new Set()) // Track new row IDs
+  const [routeId, setRouteId] = useState<number>(2) // Track the route ID
 
   useEffect(() => {
     showPageLoading("Opening Route SL-1", 800)
@@ -79,6 +80,10 @@ export default function SL1Page() {
         if (response.ok) {
           const data = await response.json()
           setDeliveryData(data.sort((a: Delivery, b: Delivery) => a.code - b.code))
+          // Set routeId from the first item
+          if (data.length > 0) {
+            setRouteId(data[0].routeId)
+          }
         }
       } catch (error) {
         console.error('Error fetching locations:', error)
@@ -206,6 +211,19 @@ export default function SL1Page() {
     }
   }
 
+  // Function to handle move complete - refresh data
+  const handleMoveComplete = async () => {
+    try {
+      const response = await fetch('/api/routes/sl-1/locations')
+      if (response.ok) {
+        const data = await response.json()
+        setDeliveryData(data.sort((a: Delivery, b: Delivery) => a.code - b.code))
+      }
+    } catch (error) {
+      console.error('Error refreshing locations:', error)
+    }
+  }
+
   if (!mounted) return null
 
   return (
@@ -291,6 +309,9 @@ export default function SL1Page() {
                 onDeleteRow={handleDeleteRow}
                 onAddRow={handleAddRow}
                 onPowerModeChange={handlePowerModeChange}
+                onMoveComplete={handleMoveComplete}
+                currentRouteSlug="sl-1"
+                currentRouteId={routeId}
                 showMap={showMap} 
               />
             </div>
