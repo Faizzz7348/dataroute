@@ -35,8 +35,18 @@ export async function POST(request: NextRequest) {
     })
 
     return NextResponse.json(route, { status: 201 })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error creating route:', error)
+    
+    // Handle unique constraint violation
+    if (error.code === 'P2002') {
+      const field = error.meta?.target?.[0] || 'field'
+      return NextResponse.json(
+        { error: `A route with this ${field} already exists` },
+        { status: 409 }
+      )
+    }
+    
     return NextResponse.json({ error: 'Failed to create route' }, { status: 500 })
   }
 }
