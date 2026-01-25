@@ -155,3 +155,49 @@ export async function PATCH(
     )
   }
 }
+
+export async function DELETE(
+  request: Request,
+  { params }: { params: Promise<{ slug: string }> }
+) {
+  const { slug } = await params
+
+  try {
+    const route = await prisma.route.findUnique({
+      where: { slug },
+      include: {
+        _count: {
+          select: { locations: true }
+        }
+      }
+    })
+
+    if (!route) {
+      return NextResponse.json(
+        { error: 'Route not found' },
+        { status: 404 }
+      )
+    }
+
+    // Delete the route (cascade will delete all locations)
+    await prisma.route.delete({
+      where: { slug }
+    })
+
+    return NextResponse.json({
+      success: true,
+      message: `Route "${route.name}" and ${route._count.locations} location(s) deleted successfully`,
+      deletedRoute: {
+        name: route.name,
+        slug: route.slug,
+        locationCount: route._count.locations
+      }
+    })
+  } catch (error) {
+    console.error('Error deleting route:', error)
+    return NextResponse.json(
+      { error: 'Failed to delete route' },
+      { status: 500 }
+    )
+  }
+}

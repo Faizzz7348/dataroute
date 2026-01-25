@@ -115,11 +115,19 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         
         const routes = await response.json()
         
-        // Get all routes (both KL and SL)
-        const allRoutes = routes.map((route: Route) => ({
-          title: route.name,
-          url: `/${route.slug}`,
-        }))
+        // Get all routes and sort them A-Z, then numerically
+        const allRoutes = routes
+          .map((route: Route) => ({
+            title: route.name,
+            url: `/${route.slug}`,
+          }))
+          .sort((a: NavItem, b: NavItem) => {
+            // Natural sort to handle numbers correctly (e.g., KL 2 before KL 10)
+            return a.title.localeCompare(b.title, undefined, { 
+              numeric: true, 
+              sensitivity: 'base' 
+            })
+          })
         
         // Update nav data with fetched routes - preserve icons from initial data
         setNavData(prevData => [

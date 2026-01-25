@@ -151,6 +151,8 @@ export function DataTable({ data, onLocationClick, onEditRow, onDeleteRow, onAdd
   const [routeInfo, setRouteInfo] = React.useState({ name: "", slug: "", description: "" })
   const [isUpdatingRoute, setIsUpdatingRoute] = React.useState(false)
   const [slugError, setSlugError] = React.useState<string>('')
+  const [deleteRouteDialogOpen, setDeleteRouteDialogOpen] = React.useState(false)
+  const [isDeletingRoute, setIsDeletingRoute] = React.useState(false)
   const [columnSettings, setColumnSettings] = React.useState([
     { id: "code", label: "Code", visible: true },
     { id: "location", label: "Location", visible: true },
@@ -1184,6 +1186,17 @@ export function DataTable({ data, onLocationClick, onEditRow, onDeleteRow, onAdd
           </div>
           <DialogFooter className="gap-2">
             <Button 
+              variant="destructive" 
+              onClick={() => {
+                setEditRouteDialogOpen(false)
+                setDeleteRouteDialogOpen(true)
+              }}
+              disabled={isUpdatingRoute}
+              className="mr-auto"
+            >
+              Delete Route
+            </Button>
+            <Button 
               variant="outline" 
               onClick={() => setEditRouteDialogOpen(false)}
               disabled={isUpdatingRoute}
@@ -1242,6 +1255,87 @@ export function DataTable({ data, onLocationClick, onEditRow, onDeleteRow, onAdd
                 </span>
               ) : (
                 'Save Changes'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Route Confirmation Dialog */}
+      <Dialog open={deleteRouteDialogOpen} onOpenChange={setDeleteRouteDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="text-destructive">Delete Route</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this route? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <div className="rounded-lg bg-destructive/10 border border-destructive/20 p-4 space-y-2">
+              <div className="flex items-start gap-2">
+                <span className="text-destructive text-xl">⚠️</span>
+                <div className="flex-1">
+                  <p className="font-semibold text-destructive">Warning: Permanent Deletion</p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Deleting "<strong>{routeInfo.name}</strong>" will permanently remove:
+                  </p>
+                  <ul className="text-sm text-muted-foreground mt-2 ml-4 list-disc space-y-1">
+                    <li>The route and all its settings</li>
+                    <li>All locations associated with this route</li>
+                    <li>All delivery data for this route</li>
+                  </ul>
+                  <p className="text-sm text-destructive font-medium mt-3">
+                    This action cannot be undone!
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => setDeleteRouteDialogOpen(false)}
+              disabled={isDeletingRoute}
+            >
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive"
+              onClick={async () => {
+                if (!currentRouteSlug) return
+                
+                setIsDeletingRoute(true)
+                try {
+                  const response = await fetch(`/api/routes/${currentRouteSlug}`, {
+                    method: 'DELETE'
+                  })
+                  
+                  if (response.ok) {
+                    const result = await response.json()
+                    // Show success message
+                    alert(`✅ ${result.message}`)
+                    // Redirect to home
+                    window.location.href = '/'
+                  } else {
+                    const error = await response.json()
+                    alert(`❌ ${error.error || 'Failed to delete route'}`)
+                  }
+                } catch (error) {
+                  console.error('Error deleting route:', error)
+                  alert('❌ Failed to delete route. Please try again.')
+                } finally {
+                  setIsDeletingRoute(false)
+                }
+              }}
+              disabled={isDeletingRoute}
+            >
+              {isDeletingRoute ? (
+                <span className="flex items-center gap-2">
+                  <span className="animate-spin">⏳</span>
+                  Deleting...
+                </span>
+              ) : (
+                'Delete Permanently'
               )}
             </Button>
           </DialogFooter>
