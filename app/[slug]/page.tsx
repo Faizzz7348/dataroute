@@ -21,7 +21,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar"
-import { Eye, EyeOff } from "lucide-react"
+import { Map, MapPin } from "lucide-react"
 import dynamic from "next/dynamic"
 import { DataTable } from "@/components/data-table"
 import { DataTableSkeleton } from "@/components/data-table-skeleton"
@@ -283,14 +283,12 @@ export default function RoutePage() {
             <ModeToggle />
           </header>
           <div className="flex flex-1 flex-col gap-4 p-4">
-            <div className="min-h-[100vh] flex-1 rounded-xl border-2 border-destructive/20 bg-gradient-to-br from-background via-muted/30 to-destructive/5 p-8 shadow-lg">
-              <div className="flex flex-col items-center justify-center h-full gap-4">
-                <h1 className="text-4xl font-bold text-destructive">Route Not Found</h1>
-                <p className="text-muted-foreground">The route <strong>{slug}</strong> does not exist.</p>
-                <Button asChild>
-                  <Link href="/">Go Home</Link>
-                </Button>
-              </div>
+            <div className="flex flex-col items-center justify-center flex-1 gap-4">
+              <h1 className="text-4xl font-bold text-destructive">Route Not Found</h1>
+              <p className="text-muted-foreground">The route <strong>{slug}</strong> does not exist.</p>
+              <Button asChild>
+                <Link href="/">Go Home</Link>
+              </Button>
             </div>
           </div>
         </SidebarInset>
@@ -302,11 +300,11 @@ export default function RoutePage() {
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <header className="sticky top-0 z-50 flex h-16 shrink-0 items-center gap-2 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4">
+        <header className="sticky top-0 z-50 flex h-14 shrink-0 items-center gap-2 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4">
           <SidebarTrigger className="-ml-1" />
           <Separator
             orientation="vertical"
-            className="mr-2 data-[orientation=vertical]:h-4"
+            className="mr-2 h-4"
           />
           <Breadcrumb className="flex-1">
             <BreadcrumbList>
@@ -321,74 +319,67 @@ export default function RoutePage() {
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setShowMap(!showMap)}
+              className={`transition-colors ${
+                showMap 
+                  ? 'text-primary hover:text-primary/80 border-primary/30' 
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+              title={showMap ? 'Hide Map' : 'Show Map'}
+            >
+              {showMap ? (
+                <MapPin className="h-4 w-4" />
+              ) : (
+                <Map className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
           <ModeToggle />
         </header>
         <div className="flex flex-1 flex-col gap-4 p-4">
-          <div className="min-h-[100vh] flex-1 rounded-xl border-2 border-primary/10 bg-gradient-to-br from-background via-muted/30 to-primary/5 p-8 shadow-lg">
-            <div className="mb-6">
-              <div className="mb-4 flex items-center justify-between">
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20">
-                  <div className="h-2 w-2 bg-primary rounded-full animate-pulse" />
-                  <h2 className="text-sm font-semibold text-primary">Map View</h2>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowMap(!showMap)}
-                  className="flex items-center gap-2"
-                >
-                  {showMap ? (
-                    <>
-                      <EyeOff className="h-4 w-4 text-red-600" />
-                      <span className="text-red-600">Hide Map</span>
-                    </>
-                  ) : (
-                    <>
-                      <Eye className="h-4 w-4 text-green-600" />
-                      <span className="text-green-600">Show Map</span>
-                    </>
-                  )}
-                </Button>
-              </div>
-              <div 
-                className={`overflow-hidden transition-all duration-700 ease-in-out ${
-                  showMap ? 'max-h-[500px] opacity-100 scale-100' : 'max-h-0 opacity-0 scale-95'
-                }`}
-                style={{ 
-                  transformOrigin: 'top center',
-                }}
-              >
-                <div 
-                  style={{ height: "500px" }}
-                  className={`transition-transform duration-700 ease-out ${
-                    showMap ? 'scale-100' : 'scale-90'
-                  }`}
-                >
-                  {showMap && (
-                    <MapComponent locations={deliveryData} selectedLocation={selectedLocation} />
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <div>
-              {isLoading ? (
-                <DataTableSkeleton rows={8} columns={7} />
-              ) : (
-                <DataTable 
-                  data={deliveryData} 
-                  onLocationClick={handleLocationClick} 
-                  onEditRow={handleEditRow}
-                  onDeleteRow={handleDeleteRow}
-                  onAddRow={handleAddRow}
-                  onPowerModeChange={handlePowerModeChange}
-                  onMoveComplete={handleMoveComplete}
-                  currentRouteSlug={slug}
-                  currentRouteId={routeId}
-                  showMap={showMap} 
-                />
+          <div 
+            className={`overflow-hidden transition-all duration-500 ease-in-out ${
+              showMap 
+                ? 'max-h-[520px] opacity-100 scale-100 mb-4' 
+                : 'max-h-0 opacity-0 scale-95 mb-0'
+            }`}
+            style={{
+              transformOrigin: 'top center',
+            }}
+          >
+            <div 
+              className={`rounded-lg border overflow-hidden shadow-md transition-all duration-500 ${
+                showMap ? 'translate-y-0' : '-translate-y-4'
+              }`}
+              style={{ height: "500px" }}
+            >
+              {showMap && (
+                <MapComponent locations={deliveryData} selectedLocation={selectedLocation} />
               )}
             </div>
+          </div>
+
+          <div>
+            {isLoading ? (
+              <DataTableSkeleton rows={8} columns={7} />
+            ) : (
+              <DataTable 
+                data={deliveryData} 
+                onLocationClick={handleLocationClick} 
+                onEditRow={handleEditRow}
+                onDeleteRow={handleDeleteRow}
+                onAddRow={handleAddRow}
+                onPowerModeChange={handlePowerModeChange}
+                onMoveComplete={handleMoveComplete}
+                currentRouteSlug={slug}
+                currentRouteId={routeId}
+                showMap={showMap} 
+              />
+            )}
           </div>
         </div>
 
@@ -522,6 +513,24 @@ export default function RoutePage() {
                       placeholder="Longitude"
                     />
                   </div>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="website-link">Website Link</Label>
+                  <Input
+                    id="website-link"
+                    type="url"
+                    value={editingRow.descriptionsObj?.websiteLink || ""}
+                    onChange={(e) =>
+                      setEditingRow({
+                        ...editingRow,
+                        descriptionsObj: {
+                          ...editingRow.descriptionsObj,
+                          websiteLink: e.target.value,
+                        },
+                      })
+                    }
+                    placeholder="https://example.com"
+                  />
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="marker-color">Marker Color</Label>

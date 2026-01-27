@@ -103,8 +103,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { theme, setTheme } = useTheme()
   const [colorTheme, setColorTheme] = React.useState<string>("default")
   const [navData, setNavData] = React.useState<NavMain[]>(data.navMain)
-  const [openMenu, setOpenMenu] = React.useState<string | null>(null)
+  const [openMenu, setOpenMenu] = React.useState<string | null>("Route VM")
   const [settingsOpen, setSettingsOpen] = React.useState(false)
+  const [searchQuery, setSearchQuery] = React.useState("")
   
   // Fetch routes from database
   React.useEffect(() => {
@@ -140,6 +141,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             items: allRoutes,
           },
         ])
+        
+        console.log('Routes fetched:', routes.length, 'routes')
+        console.log('NavData updated:', allRoutes)
       } catch (error) {
         console.error('Error fetching routes:', error)
         // Keep default data if fetch fails
@@ -236,7 +240,22 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     if (savedTheme) {
       setColorTheme(savedTheme)
     }
+    
+    // Load open menu state from localStorage
+    const savedOpenMenu = localStorage.getItem('openMenu')
+    if (savedOpenMenu) {
+      setOpenMenu(savedOpenMenu)
+    }
   }, [])
+  
+  // Save open menu state to localStorage
+  React.useEffect(() => {
+    if (openMenu) {
+      localStorage.setItem('openMenu', openMenu)
+    } else {
+      localStorage.removeItem('openMenu')
+    }
+  }, [openMenu])
 
   const handleEditModeChange = async (mode: boolean) => {
     // If turning OFF edit mode and has unsaved changes, show confirmation
@@ -370,7 +389,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
-          <SearchForm />
+          <SearchForm onSearch={setSearchQuery} />
         </SidebarHeader>
         
         <SidebarContent className="flex-1 overflow-y-auto min-h-0">
@@ -378,7 +397,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <SidebarMenu>
               {navData.map((item) => {
                 const Icon = item.icon
-                return item.items?.length ? (
+                const filteredItems = item.items?.filter(subItem => 
+                  subItem.title.toLowerCase().includes(searchQuery.toLowerCase())
+                ) || []
+                console.log('Rendering menu item:', item.title, 'items count:', filteredItems.length)
+                return filteredItems.length ? (
                   <Collapsible
                     key={item.title}
                     open={openMenu === item.title}
@@ -397,10 +420,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                       </CollapsibleTrigger>
                       <CollapsibleContent className="transition-all duration-300 ease-in-out data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0">
                         <SidebarMenuSub>
-                          {item.items.map((subItem) => (
+                          {filteredItems.map((subItem) => (
                             <SidebarMenuSubItem key={subItem.title}>
                               <SidebarMenuSubButton asChild>
-                                <Link href={subItem.url} className="font-bold">{subItem.title}</Link>
+                                <Link href={subItem.url} className="font-medium">{subItem.title}</Link>
                               </SidebarMenuSubButton>
                             </SidebarMenuSubItem>
                           ))}

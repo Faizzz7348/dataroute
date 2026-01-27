@@ -158,7 +158,6 @@ export function DataTable({ data, onLocationClick, onEditRow, onDeleteRow, onAdd
     { id: "location", label: "Location", visible: true },
     { id: "delivery", label: "Delivery", visible: true },
   ])
-  const [duplicateCodes, setDuplicateCodes] = React.useState<Map<number, Array<{id: number, location: string, routeName: string, routeSlug: string}>>>(new Map())
   const [settingsDropdownOpen, setSettingsDropdownOpen] = React.useState(false)
   const duplicateCheckTimeoutRef = React.useRef<NodeJS.Timeout | null>(null)
 
@@ -178,38 +177,6 @@ export function DataTable({ data, onLocationClick, onEditRow, onDeleteRow, onAdd
     }
     fetchRouteInfo()
   }, [currentRouteSlug])
-
-  // Check for duplicate codes
-  React.useEffect(() => {
-    const checkDuplicates = async () => {
-      const duplicatesMap = new Map<number, Array<{id: number, location: string, routeName: string, routeSlug: string}>>()
-      
-      for (const delivery of data) {
-        try {
-          const params = new URLSearchParams({
-            code: delivery.code.toString(),
-            excludeId: delivery.id.toString()
-          })
-          
-          const response = await fetch(`/api/locations/check-duplicate?${params}`)
-          if (response.ok) {
-            const result = await response.json()
-            if (result.hasDuplicate) {
-              duplicatesMap.set(delivery.code, result.duplicates)
-            }
-          }
-        } catch (error) {
-          console.error('Error checking duplicate for code:', delivery.code, error)
-        }
-      }
-      
-      setDuplicateCodes(duplicatesMap)
-    }
-    
-    if (data.length > 0) {
-      checkDuplicates()
-    }
-  }, [data])
 
   React.useEffect(() => {
     // Sort data berdasarkan power mode status, kemudian by code
@@ -276,9 +243,33 @@ export function DataTable({ data, onLocationClick, onEditRow, onDeleteRow, onAdd
     }
   }
 
+  const applyRowCount = () => {
+    const targetCount = Math.min(Math.max(rowCount, 1), 1000)
+    let finalData = [...tableData]
+
+    if (targetCount > finalData.length) {
+      const rowsToAdd = targetCount - finalData.length
+      const maxId = Math.max(...finalData.map(row => row.id), 0)
+      for (let i = 0; i < rowsToAdd; i++) {
+        finalData.push({
+          id: maxId + i + 1,
+          code: 0,
+          location: "",
+          delivery: "",
+          lat: 0,
+          lng: 0,
+        })
+      }
+    } else if (targetCount < finalData.length) {
+      finalData = finalData.slice(0, targetCount)
+    }
+
+    setTableData(finalData)
+    setRowCount(finalData.length)
+  }
+
   const openRowDialog = () => {
     setTempRowData([...tableData])
-    setRowCount(tableData.length)
     setOrderInputs({})
     setRowDialogOpen(true)
   }
@@ -310,31 +301,7 @@ export function DataTable({ data, onLocationClick, onEditRow, onDeleteRow, onAdd
   }
 
   const applyRowOrder = () => {
-    let finalData = [...tempRowData]
-    
-    // Apply row count adjustment
-    if (rowCount !== finalData.length) {
-      if (rowCount > finalData.length) {
-        // Add new rows
-        const rowsToAdd = rowCount - finalData.length
-        for (let i = 0; i < rowsToAdd; i++) {
-          const newId = Math.max(...finalData.map(row => row.id), 0) + i + 1
-          finalData.push({
-            id: newId,
-            code: 0,
-            location: "",
-            delivery: "",
-            lat: 0,
-            lng: 0,
-          })
-        }
-      } else {
-        // Remove rows
-        finalData = finalData.slice(0, rowCount)
-      }
-    }
-    
-    setTableData(finalData)
+    setTableData([...tempRowData])
     setRowDialogOpen(false)
   }
 
@@ -374,6 +341,9 @@ export function DataTable({ data, onLocationClick, onEditRow, onDeleteRow, onAdd
     }
   }
 
+  const isRowCountDirty = rowCount !== tableData.length
+  const rowCountDiff = rowCount - tableData.length
+
   const columns: ColumnDef<Delivery>[] = [
     {
       id: "rowNumber",
@@ -392,51 +362,12 @@ export function DataTable({ data, onLocationClick, onEditRow, onDeleteRow, onAdd
           header: () => <div className="text-center">Code</div>,
           cell: ({ row }) => {
             const value = row.getValue("code") as number
-            const duplicates = duplicateCodes.get(value)
-            const hasDuplicate = duplicates && duplicates.length > 0
             
             return (
-              <div className="text-center p-2 relative group">
-                <div className={`inline-flex items-center gap-1.5 px-2 py-1 rounded ${
-                  hasDuplicate 
-                    ? 'bg-destructive/10 text-destructive font-semibold border border-destructive/30' 
-                    : ''
-                }`}>
-                  {hasDuplicate && (
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="animate-pulse">
-                      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-                      <line x1="12" y1="9" x2="12" y2="13"/>
-                      <line x1="12" y1="17" x2="12.01" y2="17"/>
-                    </svg>
-                  )}
+              <div className="text-center p-2">
+                <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded">
                   {value}
                 </div>
-                {hasDuplicate && duplicates && (
-                  <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 hidden group-hover:block z-50 w-64">
-                    <div className="bg-destructive text-destructive-foreground text-xs rounded-lg p-3 shadow-lg border border-destructive/20">
-                      <div className="font-semibold mb-1.5 flex items-center gap-1">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <circle cx="12" cy="12" r="10"/>
-                          <line x1="12" y1="8" x2="12" y2="12"/>
-                          <line x1="12" y1="16" x2="12.01" y2="16"/>
-                        </svg>
-                        Duplicate Code Detected!
-                      </div>
-                      <div className="text-xs opacity-90">
-                        This code also exists in:
-                        <ul className="mt-1 space-y-0.5">
-                          {duplicates.map((dup, idx) => (
-                            <li key={idx} className="pl-2 border-l-2 border-destructive-foreground/30">
-                              • <strong>{dup.location}</strong>
-                              <br />
-                              <span className="text-[10px] opacity-75">Route: {dup.routeName}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
             )
           },
@@ -584,43 +515,12 @@ export function DataTable({ data, onLocationClick, onEditRow, onDeleteRow, onAdd
 
   return (
     <div className="w-full">
-      {/* Duplicate Warning Banner */}
-      {duplicateCodes.size > 0 && (
-        <div className="mb-4 p-4 rounded-lg border-2 border-destructive/30 bg-destructive/10 animate-pulse">
-          <div className="flex items-start gap-3">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-destructive flex-shrink-0 mt-0.5">
-              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-              <line x1="12" y1="9" x2="12" y2="13"/>
-              <line x1="12" y1="17" x2="12.01" y2="17"/>
-            </svg>
-            <div className="flex-1">
-              <h3 className="font-bold text-destructive mb-1">⚠️ Duplicate Codes Detected!</h3>
-              <p className="text-sm text-destructive/90 mb-2">
-                The following code(s) are duplicated across multiple routes. You must resolve these duplicates before saving:
-              </p>
-              <ul className="space-y-1 text-sm">
-                {Array.from(duplicateCodes.entries()).map(([code, dups]) => (
-                  <li key={code} className="flex items-start gap-2">
-                    <span className="font-semibold text-destructive">• Code {code}:</span>
-                    <span className="text-destructive/90">
-                      {dups.map(d => `${d.location} (${d.routeName})`).join(', ')}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-              <p className="text-xs text-destructive/80 mt-2 font-medium">
-                💡 Hover over the highlighted codes in the table to see details, or edit them to use unique values.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-      <div className="rounded-lg border bg-card overflow-hidden">
+      <div className="rounded-md border bg-card overflow-hidden shadow-sm">
         {/* Table Toolbar */}
-        <div className="flex items-center justify-between px-4 py-3 border-b bg-muted/30">
+        <div className="flex items-center justify-between px-4 py-3 border-b bg-muted/20 dark:bg-muted/10">
           <div>
-            <h2 className="text-base font-bold text-foreground">Data Management</h2>
-            <p className="text-sm text-muted-foreground font-medium">Configure your table settings</p>
+            <h2 className="text-sm font-semibold text-foreground">Data Management</h2>
+            <p className="text-xs text-muted-foreground">Configure your table settings</p>
           </div>
           <DropdownMenu open={settingsDropdownOpen} onOpenChange={setSettingsDropdownOpen}>
             <DropdownMenuTrigger asChild>
@@ -674,14 +574,14 @@ export function DataTable({ data, onLocationClick, onEditRow, onDeleteRow, onAdd
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-        <div className="overflow-auto max-h-[400px] bg-muted/30">
+        <div className="overflow-auto max-h-[400px] bg-muted/10 dark:bg-muted/5">
         <table className="w-full caption-bottom text-sm relative">
           <thead>
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id} className="border-b sticky top-0 z-[30]">
                 {headerGroup.headers.map((header) => {
                   return (
-                    <th key={header.id} className="h-12 px-4 text-center align-middle font-bold text-foreground bg-background" style={{ fontSize: '13px' }}>
+                    <th key={header.id} className="h-11 px-4 text-center align-middle font-semibold text-foreground bg-muted/30 dark:bg-muted/20" style={{ fontSize: '12px' }}>
                       {header.isPlaceholder
                         ? null
                         : flexRender(
@@ -736,10 +636,58 @@ export function DataTable({ data, onLocationClick, onEditRow, onDeleteRow, onAdd
         </table>
       </div>
         {/* Table Footer */}
-        <div className="flex items-center justify-center px-4 py-3 border-t bg-muted/30">
-          <div className="px-3 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium">
-            {rowCount} of {tableData.length} Records
-          </div>
+        <div className="border-t border-border bg-muted/30 dark:bg-muted/20 px-4 py-4 space-y-3">
+          <div className="flex flex-wrap items-center justify-end gap-3">
+              <div className="flex items-center gap-2">
+                <div className="h-6 w-1 bg-gradient-to-b from-primary to-primary/40 rounded-full" />
+                <Label className="text-sm font-semibold text-foreground">Row Count</Label>
+              </div>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => adjustRowCount('down')}
+                disabled={rowCount <= 1}
+                className="h-9 w-9 rounded-full hover:scale-105 transition-transform disabled:opacity-40 border-border"
+              >
+                <Minus className="h-4 w-4" />
+              </Button>
+              <Input
+                type="number"
+                value={rowCount}
+                onChange={handleRowInputChange}
+                className={`w-24 text-center text-base font-bold h-10 rounded-lg bg-background ${rowCountDiff > 0 ? 'border-destructive text-destructive' : isRowCountDirty ? 'border-primary/40' : 'border-border'}`}
+                min={1}
+                max={1000}
+              />
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => adjustRowCount('up')}
+                disabled={rowCount >= 1000}
+                className="h-9 w-9 rounded-full hover:scale-105 transition-transform disabled:opacity-40 border-border"
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+              <Button
+                onClick={applyRowCount}
+                disabled={!isRowCountDirty || rowCountDiff > 0}
+                className="h-9 px-4 text-sm font-semibold"
+              >
+                Apply Row Count
+              </Button>
+            </div>
+          {isRowCountDirty && (
+            <div className="flex flex-wrap items-center justify-center gap-2 text-xs">
+              {rowCountDiff > 0 ? (
+                <span className="text-destructive dark:text-red-400 font-medium">⚠️ Cannot add {rowCountDiff} more row{rowCountDiff !== 1 ? 's' : ''}. Please add rows first using &quot;Add New Row&quot; option.</span>
+              ) : (
+                <>
+                  <span className="text-muted-foreground dark:text-gray-400">Akan buang {Math.abs(rowCountDiff)} baris terakhir.</span>
+                  <span className="text-muted-foreground dark:text-gray-400">Tekan Apply untuk simpan.</span>
+                </>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -923,112 +871,93 @@ export function DataTable({ data, onLocationClick, onEditRow, onDeleteRow, onAdd
 
       {/* Row Settings Dialog */}
       <Dialog open={rowDialogOpen} onOpenChange={setRowDialogOpen}>
-        <DialogContent className="max-w-[75vw] backdrop-blur-sm flex flex-col max-h-[80vh]" onOpenAutoFocus={(e) => e.preventDefault()}>
-          <DialogHeader className="space-y-2 pb-4 border-b flex-shrink-0">
-            <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+        <DialogContent className="max-w-4xl max-h-[85vh] flex flex-col backdrop-blur-sm" onOpenAutoFocus={(e) => e.preventDefault()}>
+          <DialogHeader className="space-y-2 pb-3 border-b flex-shrink-0">
+            <DialogTitle className="flex items-center gap-2 text-xl">
+              <Settings className="h-5 w-5 text-primary" />
               Row Settings
             </DialogTitle>
-            <DialogDescription className="text-base">
-              Manage your table rows with ease - reorder and adjust row count
+            <DialogDescription className="text-sm text-muted-foreground">
+              Susun semula urutan baris. Perubahan akan disimpan apabila anda menekan Apply.
             </DialogDescription>
+            <div className="flex flex-wrap gap-2 pt-1">
+              <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary border border-primary/20">
+                Total: {tempRowData.length} rows
+              </span>
+              <span className="inline-flex items-center gap-1 rounded-full bg-muted/60 px-3 py-1 text-xs font-medium text-muted-foreground border border-border/70">
+                Editable via order number
+              </span>
+            </div>
           </DialogHeader>
+
           <div className="flex-1 overflow-auto py-6 space-y-6">
-            {/* Row Reorder Preview */}
+            {/* Reorder list */}
             <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <div className="h-8 w-1 bg-gradient-to-b from-primary to-primary/40 rounded-full"></div>
-                <Label className="text-lg font-bold">Reorder Rows</Label>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="h-7 w-1 bg-gradient-to-b from-primary to-primary/40 rounded-full" />
+                  <Label className="text-base font-semibold">Reorder Rows</Label>
+                </div>
+                <p className="text-xs text-muted-foreground">Masukkan nombor 1-{tempRowData.length}</p>
               </div>
-              <p className="text-sm text-muted-foreground pl-4">
-                💡 Enter order number (1-{tempRowData.length}) to reorder rows. Changes will apply after clicking Apply button.
-              </p>
-              <div className="rounded-xl border-2 border-primary/10 overflow-hidden bg-gradient-to-br from-background to-muted/20">
-                <div className="overflow-auto" style={{ height: '300px' }}>
-                  <table className="w-full caption-bottom text-sm">
-                    <thead>
-                      <tr className="border-b-2 border-primary/20 sticky top-0 z-[30]">
-                        <th className="h-12 px-4 text-center align-middle font-bold text-foreground w-[120px] bg-background" style={{ fontSize: '13px' }}>Order</th>
-                        <th className="h-12 px-4 text-center align-middle font-bold text-foreground w-[150px] bg-background" style={{ fontSize: '13px' }}>Code</th>
-                        <th className="h-12 px-4 text-center align-middle font-bold text-foreground w-[300px] bg-background" style={{ fontSize: '13px' }}>Location</th>
-                        <th className="h-12 px-4 text-center align-middle font-bold text-foreground w-[250px] bg-background" style={{ fontSize: '13px' }}>Delivery</th>
-                      </tr>
-                    </thead>
-                    <tbody>
+              <div className="flex-1 overflow-auto border-2 rounded-lg shadow-sm">
+                <table className="w-full caption-bottom text-sm relative">
+                  <thead>
+                    <tr className="border-b sticky top-0 z-10 bg-muted/80 backdrop-blur-sm text-xs uppercase tracking-wide text-muted-foreground">
+                      <th className="h-10 px-3 text-center font-semibold w-[110px]">Order</th>
+                      <th className="h-10 px-3 text-center font-semibold w-[110px]">Code</th>
+                      <th className="h-10 px-3 text-center font-semibold">Location</th>
+                      <th className="h-10 px-3 text-center font-semibold w-[130px]">Delivery</th>
+                    </tr>
+                  </thead>
+                  <tbody>
                     {tempRowData.map((row, index) => (
-                      <tr key={row.id} className="transition-all duration-200 hover:bg-primary/5">
-                        <td className="p-3 align-middle text-center w-[120px]">
+                      <tr key={row.id} className={`h-10 transition-colors hover:bg-muted/50`}>
+                        <td className="p-2 text-center align-middle">
                           <Input
                             type="number"
                             value={orderInputs[index] || ''}
                             onChange={(e) => handleOrderChange(index, e.target.value)}
                             onBlur={() => handleOrderBlur(index)}
                             placeholder={(index + 1).toString()}
-                            className="w-[80px] text-center text-sm h-9 font-semibold border-2 focus:border-primary focus:ring-2 focus:ring-primary/20"
+                            className="w-[72px] mx-auto text-center text-sm h-9 font-semibold border border-border focus:border-primary focus:ring-2 focus:ring-primary/20"
                             min={1}
                             max={tempRowData.length}
                           />
                         </td>
-                        <td className="p-3 align-middle text-center text-sm font-semibold w-[150px]">{row.code}</td>
-                        <td className="p-3 align-middle text-center text-sm font-medium w-[300px]">{row.location}</td>
-                        <td className="p-3 align-middle text-center text-sm w-[250px]">{row.delivery}</td>
+                        <td className="p-2 text-center text-[11px] font-semibold">{row.code}</td>
+                        <td className="p-2 text-center text-[11px] font-medium truncate" title={row.location}>{row.location}</td>
+                        <td className="p-2 text-center text-[10px] font-semibold uppercase text-muted-foreground">{row.delivery}</td>
                       </tr>
                     ))}
-                    </tbody>
-                  </table>
-                </div>
+                  </tbody>
+                </table>
               </div>
             </div>
 
-            <div className="border-t-2 border-dashed border-primary/20" />
-
-            {/* Row Count Control */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <div className="h-6 w-1 bg-gradient-to-b from-primary to-primary/40 rounded-full"></div>
-                <Label className="text-sm font-semibold">Entire Rows</Label>
-              </div>
-              {rowCount > tempRowData.length && (
-                <div className="flex items-center gap-2 p-2 bg-destructive/10 border border-destructive/30 rounded-md">
-                  <span className="text-sm">⚠️</span>
-                  <p className="text-xs text-destructive font-medium">
-                    This route has only {tempRowData.length} row{tempRowData.length !== 1 ? 's' : ''}. Please add new row at main table settings.
-                  </p>
-                </div>
-              )}
-              <div className="flex items-center justify-center gap-4 p-4 bg-gradient-to-br from-muted/30 to-muted/10 rounded-lg border border-primary/10">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => adjustRowCount('down')}
-                  disabled={rowCount <= 1}
-                  className="h-8 w-8 rounded-full hover:scale-110 transition-transform disabled:opacity-30"
-                >
-                  <Minus className="h-4 w-4" />
-                </Button>
-                <Input
-                  type="number"
-                  value={rowCount}
-                  onChange={handleRowInputChange}
-                  className={`w-28 text-center text-base font-bold h-9 rounded-lg border ${rowCount > tempRowData.length ? 'border-destructive text-destructive bg-destructive/5' : 'border-primary/30 focus:border-primary focus:ring-2 focus:ring-primary/20'}`}
-                  min={1}
-                  max={1000}
-                />
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => adjustRowCount('up')}
-                  className="h-8 w-8 rounded-full hover:scale-110 transition-transform"
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
+            {/* Tips */}
+            <div className="rounded-xl border border-border/60 bg-muted/40 p-3 text-xs text-muted-foreground space-y-2">
+              <div className="font-semibold text-foreground">Tips ringkas</div>
+              <ul className="list-disc pl-4 space-y-1">
+                <li>Isi nombor order untuk baris yang mahu dipindah.</li>
+                <li>Order valid: 1 hingga {tempRowData.length}.</li>
+                <li>Tekan Apply untuk simpan susunan baharu.</li>
+              </ul>
             </div>
           </div>
-          <DialogFooter className="gap-3 pt-4 border-t flex-shrink-0">
-            <Button variant="outline" onClick={() => setRowDialogOpen(false)} className="px-6 h-11 text-base font-semibold">
+
+          <DialogFooter className="gap-2 pt-3 border-t flex-shrink-0">
+            <Button
+              variant="outline"
+              onClick={() => setRowDialogOpen(false)}
+              className="px-6 h-11 text-base font-semibold"
+            >
               Cancel
             </Button>
-            <Button onClick={applyRowOrder} disabled={rowCount > tempRowData.length} className="px-8 h-11 text-base font-semibold bg-gradient-to-r from-primary to-primary/80 transition-all">
+            <Button
+              onClick={applyRowOrder}
+              className="min-w-[140px] px-8 h-11 text-base font-semibold"
+            >
               Apply Changes
             </Button>
           </DialogFooter>

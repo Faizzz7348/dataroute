@@ -73,7 +73,33 @@ function MapResizeHandler() {
   return null
 }
 
+function FitBounds({ locations }: { locations: Delivery[] }) {
+  const map = useMap()
+
+  useEffect(() => {
+    const validLocations = locations.filter(loc => loc.lat !== 0 && loc.lng !== 0)
+    if (validLocations.length > 0) {
+      const bounds = L.latLngBounds(
+        validLocations.map((loc) => [loc.lat, loc.lng] as [number, number])
+      )
+      
+      // Fit bounds with closer padding for tighter zoom
+      map.fitBounds(bounds, {
+        padding: [30, 30], // Reduced from default 50, 50
+        maxZoom: 15, // Maximum zoom level when fitting bounds
+        animate: true,
+        duration: 1
+      })
+    }
+  }, [locations, map])
+
+  return null
+}
+
 export function MapComponent({ locations, selectedLocation }: MapComponentProps) {
+  // Filter out locations with no coordinates (lat: 0, lng: 0)
+  const validLocations = locations.filter(loc => loc.lat !== 0 && loc.lng !== 0)
+  
   return (
     <MapContainer
       center={[3.1319, 101.5841]}
@@ -91,7 +117,7 @@ export function MapComponent({ locations, selectedLocation }: MapComponentProps)
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         className="map-tiles"
       />
-      {locations.map((location) => (
+      {validLocations.map((location) => (
         <Marker 
           key={location.id} 
           position={[location.lat, location.lng]}
@@ -116,6 +142,7 @@ export function MapComponent({ locations, selectedLocation }: MapComponentProps)
           </Popup>
         </Marker>
       ))}
+      <FitBounds locations={validLocations} />
       <FlyToLocation location={selectedLocation} />
       <MapResizeHandler />
     </MapContainer>

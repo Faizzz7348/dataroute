@@ -14,7 +14,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Delivery } from "@/app/data"
-import { Trash2, Plus, Pencil } from "lucide-react"
+import { Trash2, Plus, Pencil, Save, ExternalLink } from "lucide-react"
 import { useEditMode } from "@/contexts/edit-mode-context"
 
 interface InfoModalProps {
@@ -183,29 +183,33 @@ export function InfoModal({ visible, onHide, rowData, onSave, isEditMode = false
 
   return (
     <Dialog open={visible} onOpenChange={handleCancel}>
-      <DialogContent className="sm:max-w-[600px] max-h-[80vh]" onOpenAutoFocus={(e) => e.preventDefault()}>
-        <DialogHeader>
-          <DialogTitle>Location Information</DialogTitle>
-          <DialogDescription className="text-xs">
-            <strong>{rowData?.code}</strong> - {rowData?.location || 'this location'}
-          </DialogDescription>
+      <DialogContent className="sm:max-w-[700px] max-h-[85vh] p-0" onOpenAutoFocus={(e) => e.preventDefault()}>
+        <DialogHeader className="px-6 pt-6 pb-4 border-b">
+          <DialogTitle className="text-xl font-bold">Location Details</DialogTitle>
+          <div className="flex items-center gap-2 pt-2">
+            <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 text-primary font-bold text-sm">
+              {rowData?.code}
+            </span>
+            <span className="text-base font-medium text-foreground">{rowData?.location || 'Location'}</span>
+          </div>
         </DialogHeader>
-        <div className="py-4 space-y-4 max-h-[60vh] overflow-y-auto">
+        <div className="px-6 py-4 space-y-6 max-h-[calc(85vh-180px)] overflow-y-auto">
           {/* Descriptions Section */}
-          <div className="space-y-3 p-4 rounded-lg border bg-card">
-            <div className="flex items-center justify-between">
-              <Label className="text-sm font-semibold flex items-center gap-2">
-                <span className="text-primary">ℹ️</span>
-                Location Information
-              </Label>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between pb-2">
+              <div className="flex items-center gap-2">
+                <div className="h-8 w-1 bg-primary rounded-full" />
+                <Label className="text-base font-semibold">Information</Label>
+              </div>
               {!isEditing && actualEditMode && (
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
                   onClick={() => setIsEditing(true)}
-                  className="h-8"
+                  className="h-8 px-3"
                 >
-                  <Pencil className="h-4 w-4" />
+                  <Pencil className="h-3.5 w-3.5 mr-1.5" />
+                  Edit
                 </Button>
               )}
             </div>
@@ -213,72 +217,76 @@ export function InfoModal({ visible, onHide, rowData, onSave, isEditMode = false
             {/* Description Items */}
             <div className="space-y-2">
               {Object.keys(descriptions).length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-4">
-                  No information yet. {isEditing && "Add one below."}
-                </p>
+                <div className="rounded-lg border-2 border-dashed border-border bg-muted/30 p-8 text-center">
+                  <p className="text-sm text-muted-foreground">
+                    {isEditing ? "Add information using the fields below" : "No information available"}
+                  </p>
+                </div>
               ) : (
-                Object.entries(descriptions).map(([key, value]) => (
-                  <div
-                    key={key}
-                    className="flex items-center justify-between py-3 border-b last:border-b-0"
-                  >
-                    <div className="flex-1 grid grid-cols-2 gap-4">
-                      <span className="text-xs font-semibold text-muted-foreground uppercase">
-                        {key}:
-                      </span>
-                      {isEditing ? (
-                        <Input
-                          value={value}
-                          onChange={(e) => handleUpdateDescription(key, e.target.value)}
-                          className="text-sm h-8"
-                        />
-                      ) : (
-                        <span className="text-sm font-medium text-right">
-                          {value}
+                <div className="grid gap-2">
+                  {Object.entries(descriptions).map(([key, value]) => (
+                    <div
+                      key={key}
+                      className="flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-accent/5 transition-colors"
+                    >
+                      <div className="flex-1 grid grid-cols-[140px_1fr] gap-4 items-center">
+                        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                          {key}
                         </span>
+                        {isEditing ? (
+                          <Input
+                            value={value}
+                            onChange={(e) => handleUpdateDescription(key, e.target.value)}
+                            className="text-sm h-9"
+                          />
+                        ) : (
+                          <span className="text-sm font-medium">
+                            {value}
+                          </span>
+                        )}
+                      </div>
+                      {isEditing && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDeleteDescription(key)}
+                          className="h-9 w-9 text-destructive hover:text-destructive hover:bg-destructive/10"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       )}
                     </div>
-                    {isEditing && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteDescription(key)}
-                        className="ml-2 h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
-                ))
+                  ))}
+                </div>
               )}
             </div>
 
             {/* Add New Description */}
             {isEditing && (
-              <div className="pt-3 space-y-2 border-t">
-                <Label className="text-xs">Add New Information</Label>
+              <div className="pt-2">
                 <div className="flex gap-2">
                   <Input
                     value={newKey}
                     onChange={(e) => setNewKey(e.target.value)}
-                    placeholder="Label (e.g., Operating Hours)"
-                    className="flex-1"
+                    placeholder="Label (e.g., Phone)"
+                    className="flex-1 h-10"
                   />
                   <Input
                     value={newValue}
                     onChange={(e) => setNewValue(e.target.value)}
-                    placeholder="Value (e.g., 24/7)"
+                    placeholder="Value (e.g., +60123456789)"
                     onKeyPress={(e) => {
                       if (e.key === "Enter") {
                         handleAddDescription()
                       }
                     }}
-                    className="flex-1"
+                    className="flex-1 h-10"
                   />
                   <Button
                     onClick={handleAddDescription}
                     disabled={!newKey.trim() || !newValue.trim()}
-                    size="sm"
+                    size="icon"
+                    className="h-10 w-10"
                   >
                     <Plus className="h-4 w-4" />
                   </Button>
@@ -288,11 +296,12 @@ export function InfoModal({ visible, onHide, rowData, onSave, isEditMode = false
           </div>
 
           {/* Shortcuts Section */}
-          <div className="space-y-3 mt-6 pt-4 border-t">
-            <h3 className="text-sm font-semibold uppercase text-muted-foreground text-center">
-              Shortcuts
-            </h3>
-            <div className="flex flex-wrap gap-3 justify-center p-2">
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 pb-2">
+              <div className="h-8 w-1 bg-primary rounded-full" />
+              <Label className="text-base font-semibold">Quick Actions</Label>
+            </div>
+            <div className="flex flex-wrap gap-3 p-4 rounded-lg border bg-muted/20">
               {/* FamilyMart Button - only show if code is numeric */}
               {rowData?.code && !isNaN(Number(rowData.code)) && (
                 <Button
@@ -347,24 +356,6 @@ export function InfoModal({ visible, onHide, rowData, onSave, isEditMode = false
                     height={32}
                     className="h-8 w-8 hover:scale-110 transition-transform"
                   />
-                </Button>
-              )}
-
-              {/* Website Button - show if websiteLink exists OR in edit mode */}
-              {(websiteLink || actualEditMode) && (
-                <Button
-                  onClick={() => handleShortcutClick('website')}
-                  variant="ghost"
-                  size="icon"
-                  className={`h-12 w-12 hover:bg-transparent ${!websiteLink && actualEditMode ? 'opacity-50 hover:opacity-100' : ''}`}
-                  title={websiteLink ? "Website" : "Add Website Link"}
-                >
-                  <svg className="h-10 w-10 hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7zm5 16H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7z"/>
-                  </svg>
-                  {!websiteLink && actualEditMode && (
-                    <Plus className="absolute -top-1 -right-1 h-4 w-4 bg-primary text-primary-foreground rounded-full" />
-                  )}
                 </Button>
               )}
 
@@ -459,19 +450,19 @@ export function InfoModal({ visible, onHide, rowData, onSave, isEditMode = false
                 </div>
               </div>
               <DialogFooter>
-                <Button variant="outline" onClick={() => setShowWebsiteDialog(false)}>
-                  Cancel
+                <Button variant="outline" size="icon" onClick={() => setShowWebsiteDialog(false)} title="Cancel">
+                  <Trash2 className="h-4 w-4" />
                 </Button>
                 {actualEditMode ? (
-                  <Button onClick={() => {
+                  <Button size="icon" onClick={() => {
                     setDescriptions(prev => ({ ...prev, websiteLink }))
                     setShowWebsiteDialog(false)
-                  }}>
-                    Save
+                  }} title="Save">
+                    <Save className="h-4 w-4" />
                   </Button>
                 ) : (
-                  <Button onClick={() => confirmAndOpenLink('website')}>
-                    Open Link
+                  <Button size="icon" onClick={() => confirmAndOpenLink('website')} title="Open Link">
+                    <ExternalLink className="h-4 w-4" />
                   </Button>
                 )}
               </DialogFooter>
@@ -512,23 +503,23 @@ export function InfoModal({ visible, onHide, rowData, onSave, isEditMode = false
                 </div>
               </div>
               <DialogFooter>
-                <Button variant="outline" onClick={() => setShowQRDialog(false)}>
-                  Cancel
+                <Button variant="outline" size="icon" onClick={() => setShowQRDialog(false)} title="Cancel">
+                  <Trash2 className="h-4 w-4" />
                 </Button>
                 {actualEditMode ? (
-                  <Button onClick={() => {
+                  <Button size="icon" onClick={() => {
                     setDescriptions(prev => ({ 
                       ...prev, 
                       qrCodeImageUrl, 
                       qrCodeDestinationUrl 
                     }))
                     setShowQRDialog(false)
-                  }}>
-                    Save
+                  }} title="Save">
+                    <Save className="h-4 w-4" />
                   </Button>
                 ) : (
-                  <Button onClick={() => confirmAndOpenLink('qrcode')}>
-                    Open Link
+                  <Button size="icon" onClick={() => confirmAndOpenLink('qrcode')} title="Open Link">
+                    <ExternalLink className="h-4 w-4" />
                   </Button>
                 )}
               </DialogFooter>
