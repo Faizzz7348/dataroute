@@ -47,6 +47,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning className="h-full">
+      <head>
+        <meta name="theme-color" content="#3b82f6" media="(prefers-color-scheme: light)" />
+        <meta name="theme-color" content="#1e40af" media="(prefers-color-scheme: dark)" />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased h-full bg-gradient-to-br from-sky-50 via-blue-50/40 to-cyan-50/30 dark:from-slate-950 dark:via-blue-950/80 dark:to-indigo-950/60`}
         suppressHydrationWarning
