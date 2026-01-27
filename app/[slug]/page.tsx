@@ -87,40 +87,32 @@ export default function RoutePage() {
     const fetchData = async () => {
       setIsLoading(true)
       try {
-        const response = await fetch(`/api/routes/${slug}/locations`)
-        if (response.ok) {
-          const data = await response.json()
-          setDeliveryData(data.sort((a: Delivery, b: Delivery) => a.code - b.code))
-          if (data.length > 0) {
-            setRouteId(data[0].routeId)
+        // ✅ FIX: Fetch route first to get the correct routeId
+        const routeResponse = await fetch(`/api/routes/${slug}`)
+        if (routeResponse.ok) {
+          const route = await routeResponse.json()
+          setRouteName(route.name)
+          setRouteId(route.id) // ✅ Set routeId from route, not from locations!
+          
+          // Now fetch locations for this route
+          const locationsResponse = await fetch(`/api/routes/${slug}/locations`)
+          if (locationsResponse.ok) {
+            const data = await locationsResponse.json()
+            setDeliveryData(data.sort((a: Delivery, b: Delivery) => a.code - b.code))
           }
           setNotFound(false)
-        } else if (response.status === 404) {
+        } else if (routeResponse.status === 404) {
           setNotFound(true)
         }
       } catch (error) {
-        console.error('Error fetching locations:', error)
+        console.error('Error fetching route data:', error)
         setNotFound(true)
       } finally {
         setIsLoading(false)
       }
     }
     
-    // Fetch route info
-    const fetchRouteInfo = async () => {
-      try {
-        const response = await fetch(`/api/routes/${slug}`)
-        if (response.ok) {
-          const route = await response.json()
-          setRouteName(route.name)
-        }
-      } catch (error) {
-        console.error('Error fetching route info:', error)
-      }
-    }
-    
     fetchData()
-    fetchRouteInfo()
   }, [slug])
 
   const handleLocationClick = (locationName: string) => {
@@ -177,10 +169,11 @@ export default function RoutePage() {
       try {
         const isNewRow = newRowIds.has(editingRow.id)
         
+        // ✅ FIX: Always ensure routeId is correct for both create and update
         addPendingChange({
           id: editingRow.id,
           type: isNewRow ? 'create' : 'update',
-          data: isNewRow ? { ...editingRow, routeId } : editingRow
+          data: { ...editingRow, routeId } // Always set routeId to current route
         })
 
         setDeliveryData((prev) =>
@@ -230,10 +223,11 @@ export default function RoutePage() {
       const isNewRow = newRowIds.has(rowId)
       const updatedRow = { ...row, powerMode: powerMode as 'daily' | 'alt1' | 'alt2' | 'weekday' | 'weekend' | 'notset' | null }
       
+      // ✅ FIX: Always ensure routeId is correct
       addPendingChange({
         id: rowId,
         type: isNewRow ? 'create' : 'update',
-        data: isNewRow ? { ...updatedRow, routeId } : updatedRow
+        data: { ...updatedRow, routeId } // Always set routeId to current route
       })
       
       setDeliveryData((prev) =>
@@ -261,7 +255,7 @@ export default function RoutePage() {
       <SidebarProvider>
         <AppSidebar />
         <SidebarInset>
-          <header className="sticky top-0 z-50 flex h-16 shrink-0 items-center gap-2 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4">
+          <header className="sticky top-0 z-[100] flex h-16 shrink-0 items-center gap-2 border-b bg-background/98 backdrop-blur-xl supports-[backdrop-filter]:bg-background/95 shadow-sm px-4">
             <SidebarTrigger className="-ml-1" />
             <Separator
               orientation="vertical"
@@ -300,7 +294,7 @@ export default function RoutePage() {
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <header className="sticky top-0 z-50 flex h-14 shrink-0 items-center gap-2 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4">
+        <header className="sticky top-0 z-[100] flex h-16 shrink-0 items-center gap-2 border-b bg-background/98 backdrop-blur-xl shadow-sm px-4">
           <SidebarTrigger className="-ml-1" />
           <Separator
             orientation="vertical"

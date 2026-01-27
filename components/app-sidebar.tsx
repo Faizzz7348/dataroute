@@ -111,7 +111,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   React.useEffect(() => {
     const fetchRoutes = async () => {
       try {
-        const response = await fetch('/api/routes')
+        const response = await fetch('/api/routes', {
+          // ✅ FIX: Add cache busting to prevent stale data
+          cache: 'no-store',
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache'
+          }
+        })
         if (!response.ok) throw new Error('Failed to fetch routes')
         
         const routes = await response.json()
@@ -142,8 +149,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           },
         ])
         
-        console.log('Routes fetched:', routes.length, 'routes')
-        console.log('NavData updated:', allRoutes)
+        console.log('✅ Routes fetched and updated:', routes.length, 'routes')
       } catch (error) {
         console.error('Error fetching routes:', error)
         // Keep default data if fetch fails
@@ -151,6 +157,20 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     }
     
     fetchRoutes()
+    
+    // ✅ FIX: Add event listener to refetch routes when window regains focus
+    // This ensures sidebar updates after route rename/edit
+    const handleFocus = () => {
+      console.log('🔄 Window focused - refreshing routes')
+      fetchRoutes()
+    }
+    
+    window.addEventListener('focus', handleFocus)
+    
+    // Cleanup
+    return () => {
+      window.removeEventListener('focus', handleFocus)
+    }
   }, [])
   
   // Debug log
@@ -537,62 +557,62 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                       <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground sticky top-0 bg-popover z-10">Color Theme</div>
                       <div className="max-h-[250px] overflow-y-auto">
                         <DropdownMenuItem onClick={() => setColorTheme("default")} className="gap-2">
-                          <div className="h-4 w-4 rounded-full bg-gradient-to-br from-blue-500 to-blue-600" />
+                          <div className="h-4 w-4 rounded-full bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 shadow-lg shadow-blue-500/50 ring-2 ring-blue-300/30 hover:scale-110 transition-transform" />
                           <span>Default</span>
                           {colorTheme === "default" && <Check className="ml-auto h-4 w-4" />}
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => setColorTheme("zinc")} className="gap-2">
-                          <div className="h-4 w-4 rounded-full bg-zinc-700" />
+                          <div className="h-4 w-4 rounded-full bg-gradient-to-br from-zinc-400 via-zinc-600 to-zinc-700 shadow-lg shadow-zinc-500/50 ring-2 ring-zinc-300/30 hover:scale-110 transition-transform" />
                           <span>Zinc</span>
                           {colorTheme === "zinc" && <Check className="ml-auto h-4 w-4" />}
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => setColorTheme("slate")} className="gap-2">
-                          <div className="h-4 w-4 rounded-full bg-slate-700" />
+                          <div className="h-4 w-4 rounded-full bg-gradient-to-br from-slate-400 via-slate-600 to-slate-700 shadow-lg shadow-slate-500/50 ring-2 ring-slate-300/30 hover:scale-110 transition-transform" />
                           <span>Slate</span>
                           {colorTheme === "slate" && <Check className="ml-auto h-4 w-4" />}
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => setColorTheme("stone")} className="gap-2">
-                          <div className="h-4 w-4 rounded-full bg-stone-700" />
+                          <div className="h-4 w-4 rounded-full bg-gradient-to-br from-stone-400 via-stone-600 to-stone-700 shadow-lg shadow-stone-500/50 ring-2 ring-stone-300/30 hover:scale-110 transition-transform" />
                           <span>Stone</span>
                           {colorTheme === "stone" && <Check className="ml-auto h-4 w-4" />}
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => setColorTheme("gray")} className="gap-2">
-                          <div className="h-4 w-4 rounded-full bg-gray-700" />
+                          <div className="h-4 w-4 rounded-full bg-gradient-to-br from-gray-400 via-gray-600 to-gray-700 shadow-lg shadow-gray-500/50 ring-2 ring-gray-300/30 hover:scale-110 transition-transform" />
                           <span>Gray</span>
                           {colorTheme === "gray" && <Check className="ml-auto h-4 w-4" />}
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => setColorTheme("blue")} className="gap-2">
-                          <div className="h-4 w-4 rounded-full bg-blue-600" />
+                          <div className="h-4 w-4 rounded-full bg-gradient-to-br from-blue-400 via-blue-500 to-blue-700 shadow-lg shadow-blue-500/50 ring-2 ring-blue-300/30 hover:scale-110 transition-transform" />
                           <span>Blue</span>
                           {colorTheme === "blue" && <Check className="ml-auto h-4 w-4" />}
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => setColorTheme("green")} className="gap-2">
-                          <div className="h-4 w-4 rounded-full bg-green-600" />
+                          <div className="h-4 w-4 rounded-full bg-gradient-to-br from-green-400 via-green-500 to-green-700 shadow-lg shadow-green-500/50 ring-2 ring-green-300/30 hover:scale-110 transition-transform" />
                           <span>Green</span>
                           {colorTheme === "green" && <Check className="ml-auto h-4 w-4" />}
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => setColorTheme("orange")} className="gap-2">
-                          <div className="h-4 w-4 rounded-full bg-orange-600" />
+                          <div className="h-4 w-4 rounded-full bg-gradient-to-br from-orange-400 via-orange-500 to-orange-700 shadow-lg shadow-orange-500/50 ring-2 ring-orange-300/30 hover:scale-110 transition-transform" />
                           <span>Orange</span>
                           {colorTheme === "orange" && <Check className="ml-auto h-4 w-4" />}
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => setColorTheme("rose")} className="gap-2">
-                          <div className="h-4 w-4 rounded-full bg-rose-600" />
+                          <div className="h-4 w-4 rounded-full bg-gradient-to-br from-rose-400 via-rose-500 to-rose-700 shadow-lg shadow-rose-500/50 ring-2 ring-rose-300/30 hover:scale-110 transition-transform" />
                           <span>Rose</span>
                           {colorTheme === "rose" && <Check className="ml-auto h-4 w-4" />}
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => setColorTheme("red")} className="gap-2">
-                          <div className="h-4 w-4 rounded-full bg-red-600" />
+                          <div className="h-4 w-4 rounded-full bg-gradient-to-br from-red-400 via-red-500 to-red-700 shadow-lg shadow-red-500/50 ring-2 ring-red-300/30 hover:scale-110 transition-transform" />
                           <span>Red</span>
                           {colorTheme === "red" && <Check className="ml-auto h-4 w-4" />}
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => setColorTheme("yellow")} className="gap-2">
-                          <div className="h-4 w-4 rounded-full bg-yellow-600" />
+                          <div className="h-4 w-4 rounded-full bg-gradient-to-br from-yellow-300 via-yellow-500 to-yellow-600 shadow-lg shadow-yellow-500/50 ring-2 ring-yellow-300/30 hover:scale-110 transition-transform" />
                           <span>Yellow</span>
                           {colorTheme === "yellow" && <Check className="ml-auto h-4 w-4" />}
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => setColorTheme("violet")} className="gap-2">
-                          <div className="h-4 w-4 rounded-full bg-violet-600" />
+                          <div className="h-4 w-4 rounded-full bg-gradient-to-br from-violet-400 via-violet-500 to-violet-700 shadow-lg shadow-violet-500/50 ring-2 ring-violet-300/30 hover:scale-110 transition-transform" />
                           <span>Violet</span>
                           {colorTheme === "violet" && <Check className="ml-auto h-4 w-4" />}
                         </DropdownMenuItem>

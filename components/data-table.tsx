@@ -871,10 +871,9 @@ export function DataTable({ data, onLocationClick, onEditRow, onDeleteRow, onAdd
 
       {/* Row Settings Dialog */}
       <Dialog open={rowDialogOpen} onOpenChange={setRowDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[85vh] flex flex-col backdrop-blur-sm" onOpenAutoFocus={(e) => e.preventDefault()}>
+        <DialogContent className="max-w-4xl max-h-[85vh] flex flex-col backdrop-blur-sm" onOpenAutoFocus={(e) => e.preventDefault()} showCloseButton={false}>
           <DialogHeader className="space-y-2 pb-3 border-b flex-shrink-0">
-            <DialogTitle className="flex items-center gap-2 text-xl">
-              <Settings className="h-5 w-5 text-primary" />
+            <DialogTitle className="text-lg">
               Row Settings
             </DialogTitle>
             <DialogDescription className="text-sm text-muted-foreground">
@@ -893,13 +892,6 @@ export function DataTable({ data, onLocationClick, onEditRow, onDeleteRow, onAdd
           <div className="flex-1 overflow-auto py-6 space-y-6">
             {/* Reorder list */}
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="h-7 w-1 bg-gradient-to-b from-primary to-primary/40 rounded-full" />
-                  <Label className="text-base font-semibold">Reorder Rows</Label>
-                </div>
-                <p className="text-xs text-muted-foreground">Masukkan nombor 1-{tempRowData.length}</p>
-              </div>
               <div className="flex-1 overflow-auto border-2 rounded-lg shadow-sm">
                 <table className="w-full caption-bottom text-sm relative">
                   <thead>
@@ -947,18 +939,32 @@ export function DataTable({ data, onLocationClick, onEditRow, onDeleteRow, onAdd
           </div>
 
           <DialogFooter className="gap-2 pt-3 border-t flex-shrink-0">
+            {JSON.stringify(tempRowData) !== JSON.stringify(tableData) && (
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  setTempRowData([...tableData])
+                  setOrderInputs({})
+                }}
+                className="px-6 h-11 text-base font-semibold text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:text-blue-400 dark:hover:text-blue-300 dark:hover:bg-blue-950"
+              >
+                Reset
+              </Button>
+            )}
             <Button
-              variant="outline"
+              variant="ghost"
               onClick={() => setRowDialogOpen(false)}
-              className="px-6 h-11 text-base font-semibold"
+              className="px-6 h-11 text-base font-semibold text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-950"
             >
               Cancel
             </Button>
             <Button
               onClick={applyRowOrder}
-              className="min-w-[140px] px-8 h-11 text-base font-semibold"
+              disabled={JSON.stringify(tempRowData) === JSON.stringify(tableData)}
+              variant="ghost"
+              className="min-w-[140px] px-8 h-11 text-base font-semibold disabled:text-muted-foreground enabled:text-green-600 enabled:hover:text-green-700 enabled:hover:bg-green-50 dark:enabled:text-green-400 dark:enabled:hover:text-green-300 dark:enabled:hover:bg-green-950"
             >
-              Apply Changes
+              Apply
             </Button>
           </DialogFooter>
         </DialogContent>

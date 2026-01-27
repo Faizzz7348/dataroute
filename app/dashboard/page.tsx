@@ -34,7 +34,7 @@ export default function Page() {
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <header className="sticky top-0 z-50 flex h-16 shrink-0 items-center gap-2 border-b border-sky-200/40 dark:border-blue-900/50 bg-gradient-to-r from-sky-50/95 via-blue-50/60 to-cyan-50/40 dark:from-slate-950/95 dark:via-blue-950/90 dark:to-indigo-950/80 backdrop-blur-md shadow-lg shadow-sky-500/10 dark:shadow-blue-900/30 px-4">
+        <header className="sticky top-0 z-[100] flex h-16 shrink-0 items-center gap-2 border-b border-sky-200/40 dark:border-blue-900/50 bg-gradient-to-r from-sky-50/98 via-blue-50/95 to-cyan-50/98 dark:from-slate-950/98 dark:via-blue-950/95 dark:to-indigo-950/98 backdrop-blur-xl shadow-lg shadow-sky-500/20 dark:shadow-blue-900/40 px-4">
           <SidebarTrigger className="-ml-1" />
           <Separator
             orientation="vertical"
