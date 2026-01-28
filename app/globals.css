@@ -150,13 +150,29 @@ body {
   }
   
   body {
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+  
+  /* Apply safe area to sidebar and main content instead of body */
+  [data-slot="sidebar-container"] {
+    top: env(safe-area-inset-top, 0);
+    height: calc(100dvh - env(safe-area-inset-top, 0) - env(safe-area-inset-bottom, 0));
+  }
+  
+  [data-slot="sidebar-inset"] {
+    padding-top: env(safe-area-inset-top, 0);
+    padding-bottom: env(safe-area-inset-bottom, 0);
   }
   
   /* Fix for iOS PWA */
   @supports (-webkit-touch-callout: none) {
-    body {
+    [data-slot="sidebar-container"] {
+      top: max(env(safe-area-inset-top), 44px);
+      height: calc(100dvh - max(env(safe-area-inset-top), 44px) - max(env(safe-area-inset-bottom), 34px));
+    }
+    
+    [data-slot="sidebar-inset"] {
       padding-top: max(env(safe-area-inset-top), 44px);
       padding-bottom: max(env(safe-area-inset-bottom), 34px);
     }
