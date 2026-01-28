@@ -1,0 +1,229 @@
+/* Card Styling for Info Modal */
+.info-modal-card {
+    background: var(--card);
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+}
+
+.info-modal-card-header {
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary) / 0.8) 100%);
+    padding: 16px 24px;
+    color: white;
+}
+
+.info-modal-card-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0;
+    color: white;
+}
+
+.info-modal-card-subtitle {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.info-modal-card-code {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 12px;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 14px;
+    color: white;
+}
+
+.info-modal-card-location {
+    font-size: 16px;
+    font-weight: 500;
+    color: white;
+}
+
+.info-modal-card-body {
+    padding: 20px 24px;
+}
+
+.info-modal-card-footer {
+    padding: 20px 24px;
+    background: var(--muted) / 0.3;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+/* Shortcuts Section - 100% from Reference Repository */
+.shortcuts-section-info-modal {
+    margin-bottom: 24px;
+    padding: 20px;
+    background: var(--muted) / 0.3;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+}
+
+.shortcuts-title-info-modal {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 16px 0;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--foreground);
+}
+
+.shortcuts-buttons-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.shortcut-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    font-family: inherit;
+    min-height: 44px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.shortcut-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.shortcut-btn:active {
+    transform: translateY(0);
+}
+
+.shortcut-icon-img {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+/* Icon Only Button - No background, no border, no text */
+.shortcut-icon-only {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+
+.shortcut-icon-only:hover {
+    transform: scale(1.1);
+}
+
+.shortcut-icon-only:active {
+    transform: scale(0.95);
+}
+
+.shortcut-icon-only .shortcut-icon-img {
+    width: 48px;
+    height: 48px;
+}
+
+.shortcut-label {
+    font-weight: 600;
+    font-size: 13px;
+}
+
+/* FamilyMart Button - Green gradient */
+.shortcut-familymart {
+    background: linear-gradient(135deg, #34c759 0%, #28a745 100%);
+    color: white;
+}
+
+.shortcut-familymart:hover {
+    background: linear-gradient(135deg, #28a745 0%, #218838 100%);
+    color: white;
+}
+
+/* Google Maps Button - Red */
+.shortcut-google-maps {
+    background: linear-gradient(135deg, #ea4335 0%, #d33b2c 100%);
+    color: white;
+}
+
+.shortcut-google-maps:hover {
+    background: linear-gradient(135deg, #d33b2c 0%, #c23228 100%);
+    color: white;
+}
+
+/* Waze Button - Blue */
+.shortcut-waze {
+    background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
+    color: white;
+}
+
+.shortcut-waze:hover {
+    background: linear-gradient(135deg, #0099cc 0%, #007799 100%);
+    color: white;
+}
+
+/* Website Button - Purple */
+.shortcut-website {
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    color: white;
+}
+
+.shortcut-website:hover {
+    background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+    color: white;
+}
+
+/* QR Code Button - Orange */
+.shortcut-qr {
+    background: linear-gradient(135deg, #ff9500 0%, #ff6b00 100%);
+    color: white;
+}
+
+.shortcut-qr:hover {
+    background: linear-gradient(135deg, #ff6b00 0%, #e65100 100%);
+    color: white;
+}
+
+/* Responsive for mobile */
+@media (max-width: 768px) {
+    .shortcuts-section-info-modal {
+        padding: 16px;
+        margin-bottom: 16px;
+    }
+    
+    .shortcuts-title-info-modal {
+        font-size: 14px;
+        margin-bottom: 12px;
+    }
+    
+    .shortcuts-buttons-grid {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .shortcut-btn {
+        width: 100%;
+        font-size: 12px;
+        padding: 10px 14px;
+    }
+}

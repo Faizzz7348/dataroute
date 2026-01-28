@@ -71,6 +71,7 @@ export default function RoutePage() {
   const [newRowIds, setNewRowIds] = useState<Set<number>>(new Set())
   const [routeId, setRouteId] = useState<number>(1)
   const [routeName, setRouteName] = useState<string>('')
+  const [routeDescription, setRouteDescription] = useState<string>('')
   const [notFound, setNotFound] = useState(false)
   const [checkingDuplicate, setCheckingDuplicate] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
@@ -91,6 +92,7 @@ export default function RoutePage() {
         if (routeResponse.ok) {
           const route = await routeResponse.json()
           setRouteName(route.name)
+          setRouteDescription(route.description || '')
           setRouteId(route.id) // ✅ Set routeId from route, not from locations!
           
           // Now fetch locations for this route
@@ -115,12 +117,26 @@ export default function RoutePage() {
   }, [slug])
 
   const handleLocationClick = (locationName: string) => {
+    console.log('🔍 Finding location:', locationName)
+    console.log('📦 All deliveries:', deliveryData)
+    
     const delivery = deliveryData.find((del) => 
       del.location.toLowerCase().includes(locationName.toLowerCase()) ||
       locationName.toLowerCase().includes(del.location.toLowerCase())
     )
+    
+    console.log('✅ Found delivery:', delivery)
+    
     if (delivery) {
+      console.log('🗺️ Setting selected location:', { lat: delivery.lat, lng: delivery.lng })
       setSelectedLocation(delivery)
+      // Auto-open map if it's hidden
+      if (!showMap) {
+        console.log('🎬 Opening map...')
+        setShowMap(true)
+      }
+    } else {
+      console.log('❌ Delivery not found for:', locationName)
     }
   }
 
@@ -275,7 +291,7 @@ export default function RoutePage() {
             </Breadcrumb>
             <ModeToggle />
           </header>
-          <div className="pt-20 flex flex-1 flex-col gap-4 p-4">
+          <div className="pt-6 flex flex-1 flex-col gap-4 p-4 overflow-y-auto">
             <div className="flex flex-col items-center justify-center flex-1 gap-4">
               <h1 className="text-4xl font-bold text-destructive">Route Not Found</h1>
               <p className="text-muted-foreground">The route <strong>{slug}</strong> does not exist.</p>
@@ -325,19 +341,19 @@ export default function RoutePage() {
               title={showMap ? 'Hide Map' : 'Show Map'}
             >
               {showMap ? (
-                <MapPin className="h-4 w-4" />
+                <MapPin className="h-5 w-5" />
               ) : (
-                <Map className="h-4 w-4" />
+                <Map className="h-5 w-5" />
               )}
             </Button>
           </div>
           <ModeToggle />
         </header>
-        <div className="pt-20 flex flex-1 flex-col gap-4 p-4 overflow-y-auto">
+        <div className="pt-6 flex flex-1 flex-col gap-4 p-4 overflow-y-auto">
           <div 
             className={`overflow-hidden transition-all duration-500 ease-in-out ${
               showMap 
-                ? 'max-h-[520px] opacity-100 scale-100 mb-4' 
+                ? 'max-h-[600px] opacity-100 scale-100 mb-4' 
                 : 'max-h-0 opacity-0 scale-95 mb-0'
             }`}
             style={{
@@ -345,10 +361,10 @@ export default function RoutePage() {
             }}
           >
             <div 
-              className={`rounded-lg border overflow-hidden shadow-md transition-all duration-500 ${
+              className={`overflow-hidden transition-all duration-500 ${
                 showMap ? 'translate-y-0' : '-translate-y-4'
               }`}
-              style={{ height: "500px" }}
+              style={{ height: "600px" }}
             >
               {showMap && (
                 <MapComponent locations={deliveryData} selectedLocation={selectedLocation} />
@@ -372,7 +388,8 @@ export default function RoutePage() {
                 onMoveComplete={handleMoveComplete}
                 currentRouteSlug={slug}
                 currentRouteId={routeId}
-                showMap={showMap} 
+                showMap={showMap}
+                routeDescription={routeDescription}
               />
             )}
           </div>

@@ -1,150 +1,85 @@
 "use client"
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
-import { useEffect } from "react"
-import L from "leaflet"
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet"
-import "leaflet/dist/leaflet.css"
+import { useState, useEffect } from "react"
 import { Delivery } from "@/app/data"
-
-// Fix for default marker icon
-delete (L.Icon.Default.prototype as any)._getIconUrl
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
-  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
-  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
-})
 
 interface MapComponentProps {
   locations: Delivery[]
   selectedLocation: Delivery | null
 }
 
-function FlyToLocation({ location }: { location: Delivery | null }) {
-  const map = useMap()
-
-  useEffect(() => {
-    if (location) {
-      map.flyTo([location.lat, location.lng], 13, {
-        duration: 3.5,
-        easeLinearity: 0.15,
-        animate: true,
-      })
-    }
-  }, [location, map])
-
-  return null
-}
-
-function MapResizeHandler() {
-  const map = useMap()
-
-  useEffect(() => {
-    // Force map to recalculate size when component mounts or updates
-    const timer = setTimeout(() => {
-      map.invalidateSize()
-    }, 100)
-
-    // Listen for window resize and sidebar toggle events
-    const handleResize = () => {
-      map.invalidateSize()
-    }
-
-    window.addEventListener('resize', handleResize)
-    
-    // Also listen for transition end to catch sidebar animations
-    const resizeObserver = new ResizeObserver(() => {
-      map.invalidateSize()
-    })
-    
-    const container = map.getContainer().parentElement
-    if (container) {
-      resizeObserver.observe(container)
-    }
-
-    return () => {
-      clearTimeout(timer)
-      window.removeEventListener('resize', handleResize)
-      resizeObserver.disconnect()
-    }
-  }, [map])
-
-  return null
-}
-
-function FitBounds({ locations }: { locations: Delivery[] }) {
-  const map = useMap()
-
-  useEffect(() => {
-    const validLocations = locations.filter(loc => loc.lat !== 0 && loc.lng !== 0)
-    if (validLocations.length > 0) {
-      const bounds = L.latLngBounds(
-        validLocations.map((loc) => [loc.lat, loc.lng] as [number, number])
-      )
-      
-      // Fit bounds with closer padding for tighter zoom
-      map.fitBounds(bounds, {
-        padding: [30, 30], // Reduced from default 50, 50
-        maxZoom: 15, // Maximum zoom level when fitting bounds
-        animate: true,
-        duration: 1
-      })
-    }
-  }, [locations, map])
-
-  return null
-}
-
 export function MapComponent({ locations, selectedLocation }: MapComponentProps) {
-  // Filter out locations with no coordinates (lat: 0, lng: 0)
-  const validLocations = locations.filter(loc => loc.lat !== 0 && loc.lng !== 0)
+  // Calculate center from locations
+  const calculateCenter = () => {
+    const validLocations = locations.filter(loc => 
+      loc.lat !== 0 && loc.lng !== 0 && 
+      parseFloat(loc.lat.toString()) !== 0 && 
+      parseFloat(loc.lng.toString()) !== 0
+    )
+    
+    if (validLocations.length === 0) {
+      return { lat: 3.1390, lng: 101.6869 } // Default to KL
+    }
+    
+    const avgLat = validLocations.reduce((sum, loc) => sum + loc.lat, 0) / validLocations.length
+    const avgLng = validLocations.reduce((sum, loc) => sum + loc.lng, 0) / validLocations.length
+    return { lat: avgLat, lng: avgLng }
+  }
   
+  const [mapCenter, setMapCenter] = useState(calculateCenter())
+  const [zoom, setZoom] = useState(10)
+
+  // Update map when selectedLocation changes
+  useEffect(() => {
+    console.log('🗺️ MapComponent - selectedLocation changed:', selectedLocation)
+    if (selectedLocation && selectedLocation.lat !== 0 && selectedLocation.lng !== 0) {
+      console.log('✈️ Flying to:', { lat: selectedLocation.lat, lng: selectedLocation.lng })
+      setMapCenter({ lat: selectedLocation.lat, lng: selectedLocation.lng })
+      setZoom(16) // Closer zoom for selected location
+    }
+  }, [selectedLocation])
+
+  // Update map when locations change
+  useEffect(() => {
+    if (!selectedLocation) {
+      const newCenter = calculateCenter()
+      setMapCenter(newCenter)
+      setZoom(10) // Default zoom for overview
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locations])
+
+  // Calculate bbox based on zoom level
+  const getBbox = () => {
+    const zoomFactors: Record<number, number> = {
+      10: 0.1,
+      13: 0.02,
+      16: 0.005,
+    }
+    const factor = zoomFactors[zoom] || 0.1
+    return {
+      minLng: mapCenter.lng - factor,
+      minLat: mapCenter.lat - factor * 0.5,
+      maxLng: mapCenter.lng + factor,
+      maxLat: mapCenter.lat + factor * 0.5,
+    }
+  }
+
+  const bbox = getBbox()
+
   return (
-    <MapContainer
-      center={[3.1319, 101.5841]}
-      zoom={7}
-      className="leaflet-map"
-      style={{ height: "100%", width: "100%" }}
-      zoomAnimation={true}
-      fadeAnimation={true}
-      markerZoomAnimation={true}
-      zoomControl={true}
-      preferCanvas={false}
-    >
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        className="map-tiles"
+    <div className="relative w-full h-full overflow-hidden">
+      <iframe
+        key={`${mapCenter.lat}-${mapCenter.lng}-${zoom}`}
+        width="100%"
+        height="100%"
+        style={{ border: 0 }}
+        loading="lazy"
+        src={`https://www.openstreetmap.org/export/embed.html?bbox=${bbox.minLng},${bbox.minLat},${bbox.maxLng},${bbox.maxLat}&layer=mapnik&marker=${mapCenter.lat},${mapCenter.lng}`}
+        className="animate-in fade-in duration-500"
       />
-      {validLocations.map((location) => (
-        <Marker 
-          key={location.id} 
-          position={[location.lat, location.lng]}
-          riseOnHover={true}
-        >
-          <Popup
-            closeButton={true}
-            autoClose={false}
-            className="custom-popup"
-          >
-            <div className="map-popup">
-              <h3 className="popup-title">{location.location}</h3>
-              <div className="popup-details">
-                <p className="popup-item">
-                  <strong>Code:</strong> {location.code}
-                </p>
-                <p className="popup-item">
-                  <strong>Delivery:</strong> {location.delivery}
-                </p>
-              </div>
-            </div>
-          </Popup>
-        </Marker>
-      ))}
-      <FitBounds locations={validLocations} />
-      <FlyToLocation location={selectedLocation} />
-      <MapResizeHandler />
-    </MapContainer>
+      {/* Hide OpenStreetMap footer completely */}
+      <div className="absolute bottom-0 left-0 right-0 h-12 bg-background"></div>
+    </div>
   )
 }

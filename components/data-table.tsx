@@ -124,9 +124,10 @@ interface DataTableProps {
   currentRouteSlug?: string
   currentRouteId?: number
   showMap?: boolean
+  routeDescription?: string
 }
 
-export function DataTable({ data, onLocationClick, onEditRow, onDeleteRow, onAddRow, onPowerModeChange, onMoveComplete, currentRouteSlug, currentRouteId, showMap = true }: DataTableProps) {
+export function DataTable({ data, onLocationClick, onEditRow, onDeleteRow, onAddRow, onPowerModeChange, onMoveComplete, currentRouteSlug, currentRouteId, showMap = true, routeDescription }: DataTableProps) {
   'use no memo'
   
   const { isEditMode } = useEditMode()
@@ -342,21 +343,30 @@ export function DataTable({ data, onLocationClick, onEditRow, onDeleteRow, onAdd
           header: () => <div className="text-center">Location</div>,
           cell: ({ row, table }) => {
             const locationName = row.getValue("location") as string
+            const lat = row.original.lat
+            const lng = row.original.lng
             const onLocationClick = (table.options.meta as any)?.onLocationClick
             const showMap = (table.options.meta as any)?.showMap
+            const hasValidLocation = lat && lng && parseFloat(lat.toString()) !== 0 && parseFloat(lng.toString()) !== 0
             
             return (
               <div 
-                className={`text-center p-2 rounded-md transition-all duration-200 ${
-                  showMap 
-                    ? 'cursor-pointer hover:bg-primary/10 hover:text-primary hover:font-medium' 
+                className={`group text-center p-2 rounded-md transition-all duration-200 ${
+                  showMap && hasValidLocation
+                    ? 'cursor-pointer hover:bg-primary/10 hover:text-primary hover:font-semibold hover:shadow-md hover:scale-105 active:scale-95 hover:ring-2 hover:ring-primary/20' 
+                    : showMap && !hasValidLocation
+                    ? 'cursor-not-allowed'
                     : ''
                 }`}
                 onClick={() => {
-                  if (showMap) {
+                  if (showMap && hasValidLocation) {
+                    console.log('🎯 Location clicked:', locationName, { lat, lng })
                     onLocationClick?.(locationName)
+                  } else {
+                    console.log('❌ Cannot click:', { locationName, showMap, hasValidLocation, lat, lng })
                   }
                 }}
+                title={showMap && !hasValidLocation ? '⚠️ No coordinates set - Cannot show on map' : hasValidLocation && showMap ? '📍 Click to view on map' : ''}
               >
                 {locationName}
               </div>
@@ -477,6 +487,7 @@ export function DataTable({ data, onLocationClick, onEditRow, onDeleteRow, onAdd
       onLocationClick,
       onEditRow,
       showMap,
+      routeDescription,
     },
   })
 
@@ -486,8 +497,7 @@ export function DataTable({ data, onLocationClick, onEditRow, onDeleteRow, onAdd
         {/* Table Toolbar */}
         <div className="flex items-center justify-between px-4 py-3 border-b bg-muted/20 dark:bg-muted/10">
           <div>
-            <h2 className="text-sm font-semibold text-foreground">Data Management</h2>
-            <p className="text-xs text-muted-foreground">Configure your table settings</p>
+            <p className="text-xs text-muted-foreground">{(table.options.meta as any)?.routeDescription || 'Manage and view route details'}</p>
           </div>
           <DropdownMenu open={settingsDropdownOpen} onOpenChange={setSettingsDropdownOpen}>
             <DropdownMenuTrigger asChild>
@@ -556,9 +566,8 @@ export function DataTable({ data, onLocationClick, onEditRow, onDeleteRow, onAdd
                   return (
                     <th 
                       key={header.id} 
-                      className="h-11 px-4 text-center align-middle font-semibold text-foreground bg-muted/30 dark:bg-muted/20 backdrop-blur-xl" 
+                      className="h-11 px-4 text-center align-middle font-bold text-sm text-foreground bg-muted/30 dark:bg-muted/20 backdrop-blur-xl" 
                       style={{ 
-                        fontSize: '12px',
                         width: header.column.getSize(),
                         minWidth: header.column.getSize(),
                         maxWidth: header.column.getSize(),
@@ -596,7 +605,7 @@ export function DataTable({ data, onLocationClick, onEditRow, onDeleteRow, onAdd
                     {row.getVisibleCells().map((cell) => (
                       <td 
                         key={cell.id} 
-                        className="p-3 align-middle text-center font-semibold"
+                        className="p-3 align-middle text-center text-xs font-medium"
                         style={{ 
                           height: rowHeight,
                           width: cell.column.getSize(),

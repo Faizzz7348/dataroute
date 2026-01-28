@@ -55,7 +55,7 @@ export default function Page() {
           </Breadcrumb>
           <ModeToggle />
         </header>
-        <div className="pt-20 flex flex-1 flex-col gap-4 p-4">
+        <div className="pt-6 flex flex-1 flex-col gap-4 p-4 overflow-y-auto">
           <div className="grid auto-rows-min gap-4 md:grid-cols-3">
             <div className="bg-muted aspect-video rounded-xl border shadow-md" />
             <div className="bg-muted aspect-video rounded-xl border shadow-md" />

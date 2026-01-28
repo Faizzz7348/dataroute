@@ -44,6 +44,10 @@ export function InfoModal({ visible, onHide, rowData, onSave, isEditMode = false
   const [qrCodeDestinationUrl, setQRCodeDestinationUrl] = React.useState("")
   const [googleMapsLink, setGoogleMapsLink] = React.useState("")
   const [wazeLink, setWazeLink] = React.useState("")
+  const [uploadingQR, setUploadingQR] = React.useState(false)
+  const [qrPreview, setQrPreview] = React.useState<string | null>(null)
+  const fileInputRef = React.useRef<HTMLInputElement>(null)
+  const [hasChanges, setHasChanges] = React.useState(false)
 
   React.useEffect(() => {
     if (visible && rowData) {
@@ -57,6 +61,8 @@ export function InfoModal({ visible, onHide, rowData, onSave, isEditMode = false
       setIsEditing(false)
       setNewKey("")
       setNewValue("")
+      setHasChanges(false)
+      setQrPreview(null)
     }
   }, [visible, rowData])
 
@@ -68,6 +74,7 @@ export function InfoModal({ visible, onHide, rowData, onSave, isEditMode = false
       })
       setNewKey("")
       setNewValue("")
+      setHasChanges(true)
     }
   }
 
@@ -75,6 +82,7 @@ export function InfoModal({ visible, onHide, rowData, onSave, isEditMode = false
     const updated = { ...descriptions }
     delete updated[key]
     setDescriptions(updated)
+    setHasChanges(true)
   }
 
   const handleUpdateDescription = (key: string, value: string) => {
@@ -82,6 +90,7 @@ export function InfoModal({ visible, onHide, rowData, onSave, isEditMode = false
       ...descriptions,
       [key]: value
     })
+    setHasChanges(true)
   }
 
   const handleSave = () => {
@@ -96,6 +105,8 @@ export function InfoModal({ visible, onHide, rowData, onSave, isEditMode = false
       }
       onSave(updatedDescriptions)
     }
+    setHasChanges(false)
+    setIsEditing(false)
     onHide()
   }
   
@@ -174,27 +185,40 @@ export function InfoModal({ visible, onHide, rowData, onSave, isEditMode = false
   }
 
   const handleCancel = () => {
-    setDescriptions(rowData?.descriptionsObj || {})
+    if (hasChanges && actualEditMode) {
+      if (!confirm('You have unsaved changes. Are you sure you want to close?')) {
+        return
+      }
+    }
+    const desc = rowData?.descriptionsObj || {}
+    setDescriptions(desc)
+    setWebsiteLink(desc.websiteLink || "")
+    setQRCodeImageUrl(desc.qrCodeImageUrl || "")
+    setQRCodeDestinationUrl(desc.qrCodeDestinationUrl || "")
+    setGoogleMapsLink(desc.googleMapsLink || "")
+    setWazeLink(desc.wazeLink || "")
     setNewKey("")
     setNewValue("")
     setIsEditing(false)
+    setHasChanges(false)
+    setQrPreview(null)
     onHide()
   }
 
   return (
     <Dialog open={visible} onOpenChange={handleCancel}>
-      <DialogContent className="sm:max-w-[700px] max-h-[85vh] p-0" onOpenAutoFocus={(e) => e.preventDefault()}>
-        <DialogHeader className="px-6 pt-6 pb-4 border-b">
-          <DialogTitle className="text-xl font-bold">Location Details</DialogTitle>
-          <div className="flex items-center gap-2 pt-2">
-            <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 text-primary font-bold text-sm">
+      <DialogContent className="sm:max-w-[700px] max-h-[85vh] p-0 info-modal-card" onOpenAutoFocus={(e) => e.preventDefault()}>
+        <DialogTitle className="sr-only">Location Details</DialogTitle>
+        <div className="info-modal-card-header">
+          <h2 className="info-modal-card-title">Location Details</h2>
+          <div className="info-modal-card-subtitle">
+            <span className="info-modal-card-code">
               {rowData?.code}
             </span>
-            <span className="text-base font-medium text-foreground">{rowData?.location || 'Location'}</span>
+            <span className="info-modal-card-location">{rowData?.location || 'Location'}</span>
           </div>
-        </DialogHeader>
-        <div className="px-6 py-4 space-y-6 max-h-[calc(85vh-180px)] overflow-y-auto">
-          {/* Descriptions Section */}
+        </div>
+        <div className="info-modal-card-body max-h-[calc(85vh-220px)] overflow-y-auto">{/* Descriptions Section */}
           <div className="space-y-3">
             <div className="flex items-center justify-between pb-2">
               <div className="flex items-center gap-2">
@@ -224,7 +248,16 @@ export function InfoModal({ visible, onHide, rowData, onSave, isEditMode = false
                 </div>
               ) : (
                 <div className="grid gap-2">
-                  {Object.entries(descriptions).map(([key, value]) => (
+                  {Object.entries(descriptions)
+                    .filter(([key]) => {
+                      // Hide these keys in view mode
+                      if (!isEditing && !actualEditMode) {
+                        const hiddenKeys = ['websiteLink', 'qrCodeImageUrl', 'qrCodeDestinationUrl', 'googleMapsLink', 'wazeLink'];
+                        return !hiddenKeys.includes(key);
+                      }
+                      return true;
+                    })
+                    .map(([key, value]) => (
                     <div
                       key={key}
                       className="flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-accent/5 transition-colors"
@@ -295,90 +328,168 @@ export function InfoModal({ visible, onHide, rowData, onSave, isEditMode = false
             )}
           </div>
 
-          {/* Shortcuts Section */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-2 pb-2">
-              <div className="h-8 w-1 bg-primary rounded-full" />
-              <Label className="text-base font-semibold">Quick Actions</Label>
-            </div>
-            <div className="flex flex-wrap gap-3 p-4 rounded-lg border bg-muted/20">
-              {/* FamilyMart Button - only show if code is numeric */}
-              {rowData?.code && !isNaN(Number(rowData.code)) && (
-                <Button
-                  onClick={() => handleShortcutClick('familymart')}
-                  variant="ghost"
-                  size="icon"
-                  className="h-11 w-11 hover:bg-transparent"
-                  title="FamilyMart"
+          {/* Shortcuts Section - 100% Implementation from Reference Repo */}
+          <div className="shortcuts-section-info-modal">
+            <h3 className="shortcuts-title-info-modal">
+              Shortcuts
+            </h3>
+            <div className="shortcuts-buttons-grid">
+              {/* FamilyMart Button - Only if code is numeric */}
+              {(() => {
+                const code = rowData?.code
+                if (!code || code.toString().trim() === '') return null
+                const isNumeric = /^\d+$/.test(code.toString().trim())
+                if (!isNumeric) return null
+                const formattedCode = code.toString().trim().padStart(4, '0')
+                const familyMartLink = `https://fmvending.web.app/refill-service/M${formattedCode}`
+                
+                return (
+                  <a
+                    href={familyMartLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="shortcut-icon-only"
+                    title="FamilyMart Refill"
+                  >
+                    <Image 
+                      src="/FamilyMart.png" 
+                      alt="FamilyMart" 
+                      width={48}
+                      height={48}
+                      className="shortcut-icon-img"
+                    />
+                  </a>
+                )
+              })()}
+              
+              {/* Google Maps Button */}
+              {(() => {
+                const lat = rowData?.lat
+                const lng = rowData?.lng
+                const isValidLat = lat && lat.toString().trim() !== '' && parseFloat(lat.toString()) !== 0
+                const isValidLng = lng && lng.toString().trim() !== '' && parseFloat(lng.toString()) !== 0
+                if (!isValidLat || !isValidLng) return null
+                
+                return (
+                  <a
+                    href={googleMapsLink || `https://www.google.com/maps/search/?api=1&query=${rowData.lat},${rowData.lng}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="shortcut-btn shortcut-google-maps"
+                    onClick={(e) => {
+                      if (actualEditMode) {
+                        e.preventDefault()
+                        handleShortcutClick('googlemaps')
+                      }
+                    }}
+                  >
+                    <Image 
+                      src="/Gmaps.png" 
+                      alt="Google Maps" 
+                      width={20}
+                      height={20}
+                      className="shortcut-icon-img"
+                    />
+                    <span className="shortcut-label">Google Maps</span>
+                    {actualEditMode && (
+                      <Pencil className="h-3.5 w-3.5 ml-1" />
+                    )}
+                  </a>
+                )
+              })()}
+              
+              {/* Waze Button */}
+              {(() => {
+                const lat = rowData?.lat
+                const lng = rowData?.lng
+                const isValidLat = lat && lat.toString().trim() !== '' && parseFloat(lat.toString()) !== 0
+                const isValidLng = lng && lng.toString().trim() !== '' && parseFloat(lng.toString()) !== 0
+                if (!isValidLat || !isValidLng) return null
+                
+                return (
+                  <a
+                    href={wazeLink || `https://www.waze.com/ul?ll=${rowData.lat},${rowData.lng}&navigate=yes`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="shortcut-btn shortcut-waze"
+                    onClick={(e) => {
+                      if (actualEditMode) {
+                        e.preventDefault()
+                        handleShortcutClick('waze')
+                      }
+                    }}
+                  >
+                    <Image 
+                      src="/waze_app_icon-logo_brandlogos.net_l82da.png" 
+                      alt="Waze" 
+                      width={20}
+                      height={20}
+                      className="shortcut-icon-img"
+                    />
+                    <span className="shortcut-label">Waze</span>
+                    {actualEditMode && (
+                      <Pencil className="h-3.5 w-3.5 ml-1" />
+                    )}
+                  </a>
+                )
+              })()}
+              
+              {/* Website Link Button */}
+              {(websiteLink || actualEditMode) && (
+                <button
+                  onClick={() => {
+                    if (!actualEditMode && websiteLink) {
+                      let url = websiteLink
+                      if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                        url = 'https://' + url
+                      }
+                      window.open(url, '_blank')
+                    } else {
+                      handleShortcutClick('website')
+                    }
+                  }}
+                  className={`shortcut-btn shortcut-website ${!websiteLink && actualEditMode ? 'opacity-50' : ''}`}
                 >
-                  <Image 
-                    src="/FamilyMart.png" 
-                    alt="FamilyMart" 
-                    width={44}
-                    height={44}
-                    className="h-11 w-11 hover:scale-110 transition-transform"
-                  />
-                </Button>
+                  <ExternalLink className="h-4 w-4" />
+                  <span className="shortcut-label">{websiteLink ? 'Website' : 'Add Website'}</span>
+                  {actualEditMode && (
+                    websiteLink ? (
+                      <Pencil className="h-3.5 w-3.5 ml-1" />
+                    ) : (
+                      <Plus className="h-3.5 w-3.5 ml-1" />
+                    )
+                  )}
+                </button>
               )}
-
-              {/* Google Maps Button - show if custom link exists OR (lat/lng exists and in edit mode) */}
-              {(googleMapsLink || (actualEditMode && rowData?.lat && rowData?.lng)) && (
-                <Button
-                  onClick={() => handleShortcutClick('googlemaps')}
-                  variant="ghost"
-                  size="icon"
-                  className="h-11 w-11 hover:bg-transparent"
-                  title="Google Maps"
-                >
-                  <Image 
-                    src="/Gmaps.png" 
-                    alt="Google Maps" 
-                    width={44}
-                    height={44}
-                    className="h-11 w-11 hover:scale-110 transition-transform"
-                  />
-                </Button>
-              )}
-
-              {/* Waze Button - show if custom link exists OR (lat/lng exists and in edit mode) */}
-              {(wazeLink || (actualEditMode && rowData?.lat && rowData?.lng)) && (
-                <Button
-                  onClick={() => handleShortcutClick('waze')}
-                  variant="ghost"
-                  size="icon"
-                  className="h-10 w-10 hover:bg-transparent"
-                  title="Waze"
-                >
-                  <Image 
-                    src="/waze_app_icon-logo_brandlogos.net_l82da.png" 
-                    alt="Waze" 
-                    width={32}
-                    height={32}
-                    className="h-8 w-8 hover:scale-110 transition-transform"
-                  />
-                </Button>
-              )}
-
-              {/* QR Code Button - show if qrCodeImageUrl exists OR in edit mode */}
+              
+              {/* QR Code Button */}
               {(qrCodeImageUrl || actualEditMode) && (
-                <Button
-                  onClick={() => handleShortcutClick('qrcode')}
-                  variant="ghost"
-                  size="icon"
-                  className={`h-12 w-12 hover:bg-transparent ${!qrCodeImageUrl && actualEditMode ? 'opacity-50 hover:opacity-100' : ''}`}
-                  title={qrCodeImageUrl ? "QR Code" : "Add QR Code"}
+                <button
+                  onClick={() => {
+                    if (!actualEditMode && qrCodeDestinationUrl) {
+                      window.open(qrCodeDestinationUrl, '_blank')
+                    } else {
+                      handleShortcutClick('qrcode')
+                    }
+                  }}
+                  className={`shortcut-btn shortcut-qr ${!qrCodeImageUrl && actualEditMode ? 'opacity-50' : ''}`}
                 >
                   <Image 
                     src="/QRcodewoi.png" 
                     alt="QR Code" 
-                    width={40}
-                    height={40}
-                    className="h-10 w-10 hover:scale-110 transition-transform"
+                    width={20}
+                    height={20}
+                    className="shortcut-icon-img"
                   />
-                  {!qrCodeImageUrl && actualEditMode && (
-                    <Plus className="absolute -top-1 -right-1 h-4 w-4 bg-primary text-primary-foreground rounded-full" />
+                  <span className="shortcut-label">{qrCodeImageUrl ? 'QR Code' : 'Add QR Code'}</span>
+                  {actualEditMode && (
+                    qrCodeImageUrl ? (
+                      <Pencil className="h-3.5 w-3.5 ml-1" />
+                    ) : (
+                      <Plus className="h-3.5 w-3.5 ml-1" />
+                    )
                   )}
-                </Button>
+                </button>
               )}
             </div>
           </div>
@@ -455,7 +566,7 @@ export function InfoModal({ visible, onHide, rowData, onSave, isEditMode = false
                 </Button>
                 {actualEditMode ? (
                   <Button size="icon" onClick={() => {
-                    setDescriptions(prev => ({ ...prev, websiteLink }))
+                    setHasChanges(true)
                     setShowWebsiteDialog(false)
                   }} title="Save">
                     <Save className="h-4 w-4" />
@@ -481,12 +592,92 @@ export function InfoModal({ visible, onHide, rowData, onSave, isEditMode = false
                 )}
               </DialogHeader>
               <div className="space-y-4">
+                {actualEditMode && (
+                  <>
+                    <div className="space-y-2">
+                      <Label>Upload QR Code Image</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          ref={fileInputRef}
+                          type="file"
+                          accept="image/*"
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0]
+                            if (!file) return
+                            
+                            setUploadingQR(true)
+                            try {
+                              // Create preview
+                              const reader = new FileReader()
+                              reader.onloadend = () => {
+                                setQrPreview(reader.result as string)
+                              }
+                              reader.readAsDataURL(file)
+                              
+                              // Convert to base64 and store
+                              const base64 = await new Promise<string>((resolve) => {
+                                const r = new FileReader()
+                                r.onloadend = () => resolve(r.result as string)
+                                r.readAsDataURL(file)
+                              })
+                              
+                              setQRCodeImageUrl(base64)
+                            } catch (error) {
+                              console.error('Error uploading QR code:', error)
+                            } finally {
+                              setUploadingQR(false)
+                            }
+                          }}
+                          disabled={uploadingQR}
+                          className="flex-1"
+                        />
+                        {qrCodeImageUrl && (
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => {
+                              setQRCodeImageUrl("")
+                              setQrPreview(null)
+                              if (fileInputRef.current) fileInputRef.current.value = ""
+                            }}
+                            title="Clear"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                      {uploadingQR && <p className="text-xs text-muted-foreground">Uploading...</p>}
+                      {(qrPreview || qrCodeImageUrl) && (
+                        <div className="relative w-full max-w-xs mx-auto border rounded-lg p-4 bg-muted/20">
+                          <Image
+                            src={qrPreview || qrCodeImageUrl}
+                            alt="QR Code Preview"
+                            width={200}
+                            height={200}
+                            className="w-full h-auto object-contain"
+                          />
+                        </div>
+                      )}
+                    </div>
+                    <div className="relative">
+                      <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t" />
+                      </div>
+                      <div className="relative flex justify-center text-xs uppercase">
+                        <span className="bg-background px-2 text-muted-foreground">Or use URL</span>
+                      </div>
+                    </div>
+                  </>
+                )}
                 <div className="space-y-2">
                   <Label htmlFor="qr-image-url">QR Code Image URL</Label>
                   <Input 
                     id="qr-image-url"
                     value={qrCodeImageUrl} 
-                    onChange={(e) => setQRCodeImageUrl(e.target.value)}
+                    onChange={(e) => {
+                      setQRCodeImageUrl(e.target.value)
+                      setQrPreview(e.target.value)
+                    }}
                     placeholder="https://example.com/qrcode.png"
                     disabled={!actualEditMode}
                   />
@@ -503,18 +694,18 @@ export function InfoModal({ visible, onHide, rowData, onSave, isEditMode = false
                 </div>
               </div>
               <DialogFooter>
-                <Button variant="outline" size="icon" onClick={() => setShowQRDialog(false)} title="Cancel">
+                <Button variant="outline" size="icon" onClick={() => {
+                  setShowQRDialog(false)
+                  setQrPreview(null)
+                }} title="Cancel">
                   <Trash2 className="h-4 w-4" />
                 </Button>
                 {actualEditMode ? (
                   <Button size="icon" onClick={() => {
-                    setDescriptions(prev => ({ 
-                      ...prev, 
-                      qrCodeImageUrl, 
-                      qrCodeDestinationUrl 
-                    }))
+                    setHasChanges(true)
                     setShowQRDialog(false)
-                  }} title="Save">
+                    setQrPreview(null)
+                  }} title="Save" disabled={uploadingQR}>
                     <Save className="h-4 w-4" />
                   </Button>
                 ) : (
@@ -568,7 +759,7 @@ export function InfoModal({ visible, onHide, rowData, onSave, isEditMode = false
                 </Button>
                 {actualEditMode ? (
                   <Button onClick={() => {
-                    setDescriptions(prev => ({ ...prev, googleMapsLink }))
+                    setHasChanges(true)
                     setShowGoogleMapsDialog(false)
                   }}>
                     Save
@@ -624,7 +815,7 @@ export function InfoModal({ visible, onHide, rowData, onSave, isEditMode = false
                 </Button>
                 {actualEditMode ? (
                   <Button onClick={() => {
-                    setDescriptions(prev => ({ ...prev, wazeLink }))
+                    setHasChanges(true)
                     setShowWazeDialog(false)
                   }}>
                     Save
@@ -638,14 +829,17 @@ export function InfoModal({ visible, onHide, rowData, onSave, isEditMode = false
             </DialogContent>
           </Dialog>
         </div>
-        <DialogFooter>
+        <div className="info-modal-card-footer">
           <Button variant="outline" onClick={handleCancel}>
-            Cancel
+            {hasChanges && actualEditMode ? 'Discard Changes' : 'Close'}
           </Button>
-          {isEditing && (
-            <Button onClick={handleSave}>Save Changes</Button>
+          {actualEditMode && (hasChanges || isEditing) && (
+            <Button onClick={handleSave} className="bg-green-600 hover:bg-green-700">
+              <Save className="h-4 w-4 mr-2" />
+              Save All Changes
+            </Button>
           )}
-        </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   )

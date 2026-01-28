@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import "./info-modal-shortcuts.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { EditModeProvider } from "@/contexts/edit-mode-context";
 import { PageLoadingProvider } from "@/contexts/page-loading-context";
