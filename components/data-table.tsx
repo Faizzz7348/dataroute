@@ -236,48 +236,6 @@ export function DataTable({ data, onLocationClick, onEditRow, onDeleteRow, onAdd
     }
   }
 
-  const adjustRowCount = (direction: 'up' | 'down') => {
-    if (direction === 'up') {
-      setRowCount(rowCount + 1)
-    } else {
-      if (rowCount > 1) {
-        setRowCount(rowCount - 1)
-      }
-    }
-  }
-
-  const handleRowInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseInt(e.target.value)
-    if (!isNaN(value) && value > 0 && value <= 1000) {
-      setRowCount(value)
-    }
-  }
-
-  const applyRowCount = () => {
-    const targetCount = Math.min(Math.max(rowCount, 1), 1000)
-    let finalData = [...tableData]
-
-    if (targetCount > finalData.length) {
-      const rowsToAdd = targetCount - finalData.length
-      const maxId = Math.max(...finalData.map(row => row.id), 0)
-      for (let i = 0; i < rowsToAdd; i++) {
-        finalData.push({
-          id: maxId + i + 1,
-          code: 0,
-          location: "",
-          delivery: "",
-          lat: 0,
-          lng: 0,
-        })
-      }
-    } else if (targetCount < finalData.length) {
-      finalData = finalData.slice(0, targetCount)
-    }
-
-    setTableData(finalData)
-    setRowCount(finalData.length)
-  }
-
   const openRowDialog = () => {
     setTempRowData([...tableData])
     setOrderInputs({})
@@ -350,9 +308,6 @@ export function DataTable({ data, onLocationClick, onEditRow, onDeleteRow, onAdd
       }
     }
   }
-
-  const isRowCountDirty = rowCount !== tableData.length
-  const rowCountDiff = rowCount - tableData.length
 
   const columns: ColumnDef<Delivery>[] = [
     {

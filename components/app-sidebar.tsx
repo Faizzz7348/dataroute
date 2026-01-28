@@ -94,7 +94,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { theme, setTheme } = useTheme()
   const [colorTheme, setColorTheme] = React.useState<string>("default")
   const [navData, setNavData] = React.useState<NavMain[]>(data.navMain)
-  const [openMenu, setOpenMenu] = React.useState<string | null>("Route VM")
+  const [openMenu, setOpenMenu] = React.useState<string | null>(null)
   const [settingsOpen, setSettingsOpen] = React.useState(false)
   const [searchQuery, setSearchQuery] = React.useState("")
   const [routesKey, setRoutesKey] = React.useState(0) // For forcing re-fetch

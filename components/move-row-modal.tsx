@@ -160,7 +160,6 @@ export function MoveRowModal({
   }
 
   const isAllSelected = allData.length > 0 && selectedRows.size === allData.length
-  const isSomeSelected = selectedRows.size > 0 && selectedRows.size < allData.length
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
