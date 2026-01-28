@@ -382,7 +382,7 @@ export function DataTable({ data, onLocationClick, onEditRow, onDeleteRow, onAdd
             const value = row.getValue("delivery") as string
             return (
               <div className="text-center p-2">
-                ( {value} )
+                {value}
               </div>
             )
           },

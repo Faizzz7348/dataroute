@@ -98,6 +98,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const [settingsOpen, setSettingsOpen] = React.useState(false)
   const [searchQuery, setSearchQuery] = React.useState("")
   const [routesKey, setRoutesKey] = React.useState(0) // For forcing re-fetch
+  const [locationCounts, setLocationCounts] = React.useState<Record<string, number>>({})
   
   // Fetch routes from database
   React.useEffect(() => {
@@ -130,6 +131,26 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               sensitivity: 'base' 
             })
           })
+        
+        // Fetch location counts for each route
+        const counts: Record<string, number> = {}
+        await Promise.all(
+          routes.map(async (route: Route) => {
+            try {
+              const locResponse = await fetch(`/api/routes/${route.slug}/locations`, {
+                cache: 'no-store'
+              })
+              if (locResponse.ok) {
+                const locations = await locResponse.json()
+                counts[route.slug] = locations.length
+              }
+            } catch (error) {
+              console.error(`Error fetching locations for ${route.slug}:`, error)
+              counts[route.slug] = 0
+            }
+          })
+        )
+        setLocationCounts(counts)
         
         // Update nav data with fetched routes - preserve icons from initial data
         setNavData(prevData => [
@@ -459,13 +480,22 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                       </CollapsibleTrigger>
                       <CollapsibleContent className="transition-all duration-300 ease-in-out data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0">
                         <SidebarMenuSub>
-                          {filteredItems.map((subItem) => (
-                            <SidebarMenuSubItem key={subItem.title}>
-                              <SidebarMenuSubButton asChild>
-                                <Link href={subItem.url} className="font-medium">{subItem.title}</Link>
-                              </SidebarMenuSubButton>
-                            </SidebarMenuSubItem>
-                          ))}
+                          {filteredItems.map((subItem) => {
+                            const slug = subItem.url.replace('/', '')
+                            const count = locationCounts[slug] || 0
+                            return (
+                              <SidebarMenuSubItem key={subItem.title}>
+                                <SidebarMenuSubButton asChild>
+                                  <Link href={subItem.url} className="font-medium flex items-center justify-between w-full">
+                                    <span>{subItem.title}</span>
+                                    <span className="ml-auto px-1.5 py-0.5 text-[10px] font-semibold rounded-full bg-primary/10 text-primary min-w-[20px] text-center">
+                                      {count}
+                                    </span>
+                                  </Link>
+                                </SidebarMenuSubButton>
+                              </SidebarMenuSubItem>
+                            )
+                          })}
                           {/* Add Route Button - Only show in edit mode for Route VM */}
                           {isEditMode && item.title === "Route VM" && (
                             <SidebarMenuSubItem>
