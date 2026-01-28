@@ -557,7 +557,7 @@ export function DataTable({ data, onLocationClick, onEditRow, onDeleteRow, onAdd
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-        <div className="overflow-auto max-h-[400px] bg-muted/10 dark:bg-muted/5">
+        <div className="overflow-auto max-h-[400px] bg-muted/10 dark:bg-muted/5 transition-all duration-300 ease-in-out">
         <table className="w-full caption-bottom text-sm relative">
           <thead>
             {table.getHeaderGroups().map((headerGroup) => (

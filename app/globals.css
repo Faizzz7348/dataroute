@@ -110,17 +110,22 @@
 html {
   height: 100%;
   min-height: 100%;
+  min-height: 100dvh;
   /* Prevent text size adjustment on orientation change */
   -webkit-text-size-adjust: 100%;
   -moz-text-size-adjust: 100%;
   text-size-adjust: 100%;
   /* Prevent page-level scrolling - only SidebarInset should scroll */
   overflow: hidden;
+  /* Ensure no gaps */
+  margin: 0;
+  padding: 0;
 }
 
 body {
   height: 100%;
   min-height: 100%;
+  min-height: 100dvh;
   /* Prevent all body scrolling - only content area scrolls */
   overflow: hidden;
   /* Better font rendering */
@@ -129,6 +134,15 @@ body {
   /* Hardware acceleration */
   transform: translateZ(0);
   -webkit-transform: translateZ(0);
+  /* Ensure no gaps */
+  margin: 0;
+  padding: 0;
+  position: fixed;
+  width: 100%;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
 }
 
 /* Safe area padding for notched devices */
@@ -141,11 +155,72 @@ body {
 }
 
 .pb-safe {
-  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+  padding-bottom: env(safe-area-inset-bottom, 0.5rem);
 }
 
 .pl-safe {
   padding-left: max(0.5rem, env(safe-area-inset-left));
+}
+
+/* Additional height utilities for better viewport handling */
+.min-h-screen-safe {
+  min-height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  min-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+}
+
+.h-screen-safe {
+  height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+}
+
+/* Responsive improvements - handle all screen sizes and orientations */
+@media (orientation: landscape) and (max-height: 500px) {
+  /* On short landscape screens, reduce padding */
+  .pt-6 {
+    padding-top: 1rem !important;
+  }
+}
+
+/* Prevent content overflow on small screens */
+@media (max-width: 640px) {
+  .data-table-container {
+    max-width: 100vw;
+  }
+}
+
+/* Smooth transitions for resize events */
+* {
+  transition-property: padding, margin, height, width;
+  transition-duration: 0s;
+  transition-timing-function: ease;
+}
+
+/* Re-enable transitions after initial load */
+.transitions-enabled * {
+  transition-duration: 0.2s;
+}
+
+/* Enhanced smooth transitions for sidebar and content */
+[data-slot="sidebar-inset"],
+[data-slot="sidebar-container"],
+[data-slot="sidebar-gap"] {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Ensure full height coverage without gaps */
+#__next,
+[data-slot="sidebar-provider"] {
+  height: 100%;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Smooth content reflow when sidebar opens/closes */
+.sidebar-transition {
+  transition: margin 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              padding 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .dark {
@@ -430,17 +505,19 @@ body {
 
 /* Ensure map container responds to sidebar changes */
 .leaflet-container {
-  transition: width 0.2s ease-in-out, height 0.2s ease-in-out;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+              height 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Smooth tile loading */
 .map-tiles {
-  transition: opacity 0.3s ease-in-out;
+  transition: opacity 0.4s ease-in-out;
 }
 
 /* Smooth zoom transitions */
 .leaflet-zoom-animated {
-  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
 /* Smooth marker animations */

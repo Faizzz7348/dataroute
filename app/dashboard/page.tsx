@@ -55,13 +55,15 @@ export default function Page() {
           </Breadcrumb>
           <ModeToggle />
         </header>
-        <div className="pt-6 flex flex-1 flex-col gap-4 p-4 overflow-y-auto">
+        <div className="flex flex-1 flex-col p-4 pt-6 pb-safe overflow-y-auto">
+          <div className="flex flex-1 flex-col gap-4">
           <div className="grid auto-rows-min gap-4 md:grid-cols-3">
             <div className="bg-muted aspect-video rounded-xl border shadow-md" />
             <div className="bg-muted aspect-video rounded-xl border shadow-md" />
             <div className="bg-muted aspect-video rounded-xl border shadow-md" />
           </div>
-          <div className="bg-muted min-h-[100vh] flex-1 rounded-xl border shadow-lg md:min-h-min" />
+          <div className="bg-muted min-h-[50vh] flex-1 rounded-xl border shadow-lg" />
+          </div>
         </div>
       </SidebarInset>
     </SidebarProvider>

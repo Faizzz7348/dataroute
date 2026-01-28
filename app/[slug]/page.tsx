@@ -349,9 +349,10 @@ export default function RoutePage() {
           </div>
           <ModeToggle />
         </header>
-        <div className="pt-6 flex flex-1 flex-col gap-4 p-4 overflow-y-auto">
+        <div className="flex flex-1 flex-col p-4 pt-6 pb-safe overflow-y-auto transition-all duration-300 ease-in-out">
+          <div className="flex flex-1 flex-col gap-4">
           <div 
-            className={`overflow-hidden transition-all duration-500 ease-in-out ${
+            className={`overflow-hidden transition-all duration-700 ease-in-out ${
               showMap 
                 ? 'max-h-[600px] opacity-100 scale-100 mb-4' 
                 : 'max-h-0 opacity-0 scale-95 mb-0'
@@ -361,8 +362,8 @@ export default function RoutePage() {
             }}
           >
             <div 
-              className={`overflow-hidden transition-all duration-500 ${
-                showMap ? 'translate-y-0' : '-translate-y-4'
+              className={`overflow-hidden transition-all duration-700 ease-in-out ${
+                showMap ? 'translate-y-0 opacity-100' : '-translate-y-4 opacity-0'
               }`}
               style={{ height: "600px" }}
             >
@@ -392,6 +393,7 @@ export default function RoutePage() {
                 routeDescription={routeDescription}
               />
             )}
+          </div>
           </div>
         </div>
 

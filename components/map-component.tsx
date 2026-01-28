@@ -68,7 +68,7 @@ export function MapComponent({ locations, selectedLocation }: MapComponentProps)
   const bbox = getBbox()
 
   return (
-    <div className="relative w-full h-full overflow-hidden">
+    <div className="relative w-full h-full overflow-hidden rounded-lg">
       <iframe
         key={`${mapCenter.lat}-${mapCenter.lng}-${zoom}`}
         width="100%"
@@ -76,7 +76,7 @@ export function MapComponent({ locations, selectedLocation }: MapComponentProps)
         style={{ border: 0 }}
         loading="lazy"
         src={`https://www.openstreetmap.org/export/embed.html?bbox=${bbox.minLng},${bbox.minLat},${bbox.maxLng},${bbox.maxLat}&layer=mapnik&marker=${mapCenter.lat},${mapCenter.lng}`}
-        className="animate-in fade-in duration-500"
+        className="animate-in fade-in zoom-in-95 duration-700 ease-out"
       />
       {/* Hide OpenStreetMap footer completely */}
       <div className="absolute bottom-0 left-0 right-0 h-12 bg-background"></div>
