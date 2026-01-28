@@ -25,8 +25,8 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#3b82f6" },
-    { media: "(prefers-color-scheme: dark)", color: "#1e3a8a" }
+    { media: "(prefers-color-scheme: light)", color: "#fafbfc" },
+    { media: "(prefers-color-scheme: dark)", color: "#0d1117" }
   ],
   viewportFit: "cover"
 };
@@ -75,8 +75,8 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className="h-full">
       <head>
-        <meta name="theme-color" content="#3b82f6" media="(prefers-color-scheme: light)" />
-        <meta name="theme-color" content="#1e3a8a" media="(prefers-color-scheme: dark)" />
+        <meta name="theme-color" content="#fafbfc" media="(prefers-color-scheme: light)" />
+        <meta name="theme-color" content="#0d1117" media="(prefers-color-scheme: dark)" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="mobile-web-app-capable" content="yes" />

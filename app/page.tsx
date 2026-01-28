@@ -35,8 +35,7 @@ export default function Home() {
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <div className="fixed top-0 left-0 right-0 z-50 md:left-64 -mt-20 pt-20">
-          <header className="flex h-16 shrink-0 items-center gap-2 border-b bg-background backdrop-blur-xl shadow-sm px-4">
+        <header className="sticky top-0 z-50 flex h-16 shrink-0 items-center gap-2 border-b bg-background backdrop-blur-xl shadow-sm px-4 before:absolute before:inset-x-0 before:bottom-0 before:h-[200px] before:bg-background before:-translate-y-full before:-z-10">
           <SidebarTrigger className="-ml-1" />
           <Separator
             orientation="vertical"
@@ -57,8 +56,7 @@ export default function Home() {
           </Breadcrumb>
           <ModeToggle />
         </header>
-        </div>
-        <div className="pt-16 flex flex-1 flex-col gap-4 p-4">
+        <div className="pt-20 flex flex-1 flex-col gap-4 p-4">
           <div className="flex flex-col gap-6">
               <div className="flex items-center gap-3">
                 <div className="h-12 w-1 bg-primary rounded-full" />
