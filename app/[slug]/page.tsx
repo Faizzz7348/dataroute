@@ -254,7 +254,7 @@ export default function RoutePage() {
       <SidebarProvider>
         <AppSidebar />
         <SidebarInset>
-          <header className="fixed left-0 right-0 z-50 flex h-16 shrink-0 items-center gap-2 border-b bg-background backdrop-blur-xl shadow-sm px-4 md:left-64 pt-safe">
+          <header className="fixed top-0 left-0 right-0 z-50 flex h-16 shrink-0 items-center gap-2 border-b bg-background backdrop-blur-xl shadow-sm px-4 md:left-64 before:absolute before:inset-x-0 before:top-0 before:h-screen before:-z-10 before:bg-background">
             <SidebarTrigger className="-ml-1" />
             <Separator
               orientation="vertical"
@@ -293,7 +293,7 @@ export default function RoutePage() {
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <header className="fixed left-0 right-0 z-50 flex h-16 shrink-0 items-center gap-2 border-b bg-background backdrop-blur-xl shadow-sm px-4 md:left-64 pt-safe">
+        <header className="fixed top-0 left-0 right-0 z-50 flex h-16 shrink-0 items-center gap-2 border-b bg-background backdrop-blur-xl shadow-sm px-4 md:left-64 before:absolute before:inset-x-0 before:top-0 before:h-screen before:-z-10 before:bg-background">
           <SidebarTrigger className="-ml-1" />
           <Separator
             orientation="vertical"
