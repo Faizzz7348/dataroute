@@ -349,8 +349,8 @@ export default function RoutePage() {
           </div>
           <ModeToggle />
         </header>
-        <div className="flex flex-1 flex-col p-4 pt-6 pb-safe overflow-y-auto transition-all duration-300 ease-in-out">
-          <div className="flex flex-1 flex-col gap-2">
+        <div className="flex flex-1 flex-col p-4 pb-safe overflow-y-auto transition-all duration-300 ease-in-out">
+          <div className="flex flex-1 flex-col gap-2 pt-2">
           {showMap && (
             <div 
               className="overflow-hidden animate-in slide-in-from-top-4 fade-in duration-400 mb-2"
