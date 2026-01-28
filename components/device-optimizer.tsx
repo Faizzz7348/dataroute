@@ -1,8 +1,8 @@
 "use client"
 
-import { useEffect } from 'react'
+import { useEffect, memo } from 'react'
 
-export function DeviceOptimizer() {
+function DeviceOptimizerComponent() {
   useEffect(() => {
     // Set viewport height CSS variable for better mobile support
     const setVH = () => {
@@ -78,3 +78,5 @@ export function DeviceOptimizer() {
 
   return null
 }
+
+export const DeviceOptimizer = memo(DeviceOptimizerComponent)

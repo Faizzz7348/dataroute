@@ -87,7 +87,7 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/icon-192x192.png" />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background h-full`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background h-full transitions-enabled`}
         suppressHydrationWarning
       >
         <ThemeProvider

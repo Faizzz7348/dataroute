@@ -74,35 +74,42 @@ export default withPWA({
     },
     {
       urlPattern: /\.(?:js)$/i,
-      handler: 'StaleWhileRevalidate',
+      handler: 'CacheFirst',
       options: {
         cacheName: 'static-js-assets',
         expiration: {
-          maxEntries: 32,
-          maxAgeSeconds: 60 * 60 * 24 * 7, // 7 days
+          maxEntries: 128,
+          maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
+        },
+        cacheableResponse: {
+          statuses: [0, 200],
         },
       },
     },
     {
       urlPattern: /\.(?:css|less)$/i,
-      handler: 'StaleWhileRevalidate',
+      handler: 'CacheFirst',
       options: {
         cacheName: 'static-style-assets',
         expiration: {
-          maxEntries: 32,
-          maxAgeSeconds: 60 * 60 * 24 * 7, // 7 days
+          maxEntries: 64,
+          maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
+        },
+        cacheableResponse: {
+          statuses: [0, 200],
         },
       },
     },
     {
       urlPattern: /\/_next\/data\/.+\/.+\.json$/i,
-      handler: 'StaleWhileRevalidate',
+      handler: 'NetworkFirst',
       options: {
         cacheName: 'next-data',
         expiration: {
-          maxEntries: 32,
+          maxEntries: 64,
           maxAgeSeconds: 60 * 60 * 24, // 24 hours
         },
+        networkTimeoutSeconds: 3,
       },
     },
     {

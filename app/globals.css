@@ -124,29 +124,40 @@ html {
 
 body {
   height: 100%;
-  min-height: 100vh;
+  height: 100dvh;
+  min-height: 100%;
   min-height: 100dvh;
+  max-height: 100dvh;
   /* Prevent all body scrolling - only content area scrolls */
   overflow: hidden;
   /* Better font rendering */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  /* Hardware acceleration */
+  /* Hardware acceleration for smooth performance */
   transform: translateZ(0);
   -webkit-transform: translateZ(0);
+  will-change: transform;
   /* Ensure no gaps */
   margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
+  /* Force GPU acceleration */
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 /* PWA standalone mode fixes */
 @media (display-mode: standalone) {
   html, body {
-    height: 100vh;
+    height: 100%;
     height: 100dvh;
+    max-height: 100dvh;
     overflow: hidden;
+    position: fixed;
+    width: 100%;
+    left: 0;
+    top: 0;
   }
   
   body {
@@ -209,13 +220,14 @@ body {
 
 /* Additional height utilities for better viewport handling */
 .min-h-screen-safe {
-  min-height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
-  min-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  min-height: calc(100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  min-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
 }
 
 .h-screen-safe {
-  height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
-  height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  height: calc(100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  max-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
 }
 
 /* Responsive improvements - handle all screen sizes and orientations */
@@ -233,16 +245,17 @@ body {
   }
 }
 
-/* Smooth transitions for resize events */
+/* Smooth transitions for resize events - optimized for performance */
 * {
   transition-property: padding, margin, height, width;
   transition-duration: 0s;
-  transition-timing-function: ease;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Re-enable transitions after initial load */
+/* Re-enable transitions after initial load with GPU acceleration */
 .transitions-enabled * {
-  transition-duration: 0.2s;
+  transition-duration: 0.15s;
+  will-change: auto;
 }
 
 /* Enhanced smooth transitions for sidebar and content */
@@ -256,9 +269,16 @@ body {
 #__next,
 [data-slot="sidebar-provider"] {
   height: 100%;
+  height: 100dvh;
   min-height: 100dvh;
+  max-height: 100dvh;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+  /* Performance optimization */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 /* Smooth content reflow when sidebar opens/closes */
