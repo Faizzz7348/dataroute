@@ -349,12 +349,14 @@ export default function RoutePage() {
           </div>
           <ModeToggle />
         </header>
-        <div className="flex flex-1 flex-col p-4 overflow-y-auto transition-all duration-300 ease-in-out">
+        <div className="flex flex-1 flex-col p-4 overflow-y-auto">
           <div className="flex flex-1 flex-col gap-2">
           {showMap && (
             <div 
-              className="overflow-hidden animate-in slide-in-from-top-4 fade-in duration-400 mb-2"
-              style={{ height: "600px" }}
+              className="overflow-hidden mb-2 shadow-lg rounded-lg"
+              style={{ 
+                height: "450px"
+              }}
             >
               <MapComponent locations={deliveryData} selectedLocation={selectedLocation} />
             </div>
@@ -476,8 +478,6 @@ export default function RoutePage() {
                       <SelectItem value="Weekday">Weekday</SelectItem>
                       <SelectItem value="Alt 1">Alt 1</SelectItem>
                       <SelectItem value="Alt 2">Alt 2</SelectItem>
-                      <SelectItem value="Weekly">Weekly</SelectItem>
-                      <SelectItem value="Monthly">Monthly</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

@@ -379,10 +379,10 @@ export function DataTable({ data, onLocationClick, onEditRow, onDeleteRow, onAdd
           accessorKey: "delivery",
           header: () => <div className="text-center">Delivery</div>,
           cell: ({ row }) => {
-            const value = row.getValue("delivery")
+            const value = row.getValue("delivery") as string
             return (
               <div className="text-center p-2">
-                {value as string}
+                ( {value} )
               </div>
             )
           },
@@ -504,14 +504,14 @@ export function DataTable({ data, onLocationClick, onEditRow, onDeleteRow, onAdd
               <Button 
                 variant="outline" 
                 size="icon" 
-                className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 hover:from-blue-500/20 hover:to-purple-500/20 dark:from-blue-500/20 dark:to-purple-500/20 dark:hover:from-blue-500/30 dark:hover:to-purple-500/30 border border-blue-500/20 dark:border-blue-500/30 backdrop-blur-sm transition-all duration-300"
+                className="h-10 w-10 bg-gradient-to-r from-blue-500/10 to-purple-500/10 hover:from-blue-500/20 hover:to-purple-500/20 dark:from-blue-500/20 dark:to-purple-500/20 dark:hover:from-blue-500/30 dark:hover:to-purple-500/30 border border-blue-500/20 dark:border-blue-500/30 backdrop-blur-sm transition-all duration-300"
               >
-                <Settings className={`h-4 w-4 transition-transform duration-500 ease-in-out ${
+                <Settings className={`h-5 w-5 transition-transform duration-500 ease-in-out ${
                   settingsDropdownOpen ? 'rotate-180' : 'rotate-0'
                 }`} />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="backdrop-blur-md bg-background/95 border-primary/20">
+            <DropdownMenuContent align="end" className="min-w-[200px] backdrop-blur-xl bg-background/90 border-primary/30 shadow-lg">
               <DropdownMenuItem
                 onClick={() => setColumnDialogOpen(true)}
                 className="cursor-pointer"
@@ -532,12 +532,7 @@ export function DataTable({ data, onLocationClick, onEditRow, onDeleteRow, onAdd
               </DropdownMenuItem>
               {isEditMode && (
                 <>
-                  <DropdownMenuItem
-                    onClick={() => setAddRowDialogOpen(true)}
-                    className="cursor-pointer"
-                  >
-                    Add New Row
-                  </DropdownMenuItem>
+                  {/* Add New Row moved to table */}
                   {currentRouteSlug && currentRouteId && (
                     <DropdownMenuItem
                       onClick={() => setMoveRowModalOpen(true)}
@@ -587,60 +582,102 @@ export function DataTable({ data, onLocationClick, onEditRow, onDeleteRow, onAdd
           </thead>
           <tbody className="text-xs">
             {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row, rowIndex) => {
-                const delivery = row.original
-                const isActive = isPowerModeActive(delivery.powerMode)
-                const hasMode = delivery.powerMode && delivery.powerMode !== 'notset'
-                
-                return (
-                  <tr
-                    key={row.id}
-                    data-state={row.getIsSelected() && "selected"}
-                    className={`transition-all duration-200 ${
-                      hasMode && !isActive 
-                        ? 'opacity-40 bg-muted/20 hover:bg-primary/5' 
-                        : 'hover:bg-primary/5'
-                    }`}
+              <>
+                {table.getRowModel().rows.map((row, rowIndex) => {
+                  const delivery = row.original
+                  const isActive = isPowerModeActive(delivery.powerMode)
+                  const hasMode = delivery.powerMode && delivery.powerMode !== 'notset'
+                  
+                  return (
+                    <tr
+                      key={row.id}
+                      data-state={row.getIsSelected() && "selected"}
+                      className={`transition-all duration-200 ${
+                        hasMode && !isActive 
+                          ? 'opacity-40 bg-muted/20 hover:bg-primary/5' 
+                          : 'hover:bg-primary/5'
+                      }`}
+                    >
+                      {row.getVisibleCells().map((cell) => (
+                        <td 
+                          key={cell.id} 
+                          className="p-3 align-middle text-center text-xs font-medium"
+                          style={{ 
+                            height: rowHeight,
+                            width: cell.column.getSize(),
+                            minWidth: cell.column.getSize(),
+                            maxWidth: cell.column.getSize(),
+                          }}
+                        >
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            { ...cell.getContext(), rowIndex }
+                          )}
+                        </td>
+                      ))}
+                    </tr>
+                  )
+                })}
+                {/* Add New Row Button as Table Row */}
+                {isEditMode && (
+                  <tr 
+                    onClick={() => setAddRowDialogOpen(true)}
+                    className="group cursor-pointer border-t-2 border-dashed border-primary/30 hover:border-primary/60 bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 hover:from-primary/10 hover:via-primary/15 hover:to-primary/10 transition-all duration-300 ease-in-out"
                   >
-                    {row.getVisibleCells().map((cell) => (
-                      <td 
-                        key={cell.id} 
-                        className="p-3 align-middle text-center text-xs font-medium"
-                        style={{ 
-                          height: rowHeight,
-                          width: cell.column.getSize(),
-                          minWidth: cell.column.getSize(),
-                          maxWidth: cell.column.getSize(),
-                        }}
-                      >
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          { ...cell.getContext(), rowIndex }
-                        )}
-                      </td>
-                    ))}
+                    <td 
+                      colSpan={columns.length}
+                      className="p-4 text-center"
+                      style={{ height: rowHeight }}
+                    >
+                      <div className="flex items-center justify-center gap-2 text-primary group-hover:text-primary/80 transition-colors">
+                        <Plus className="h-5 w-5 animate-pulse group-hover:scale-110 transition-transform" />
+                        <span className="text-sm font-semibold tracking-wide">Add New Row</span>
+                        <Plus className="h-5 w-5 animate-pulse group-hover:scale-110 transition-transform" />
+                      </div>
+                    </td>
                   </tr>
-                )
-              })
+                )}
+              </>
             ) : (
-              <tr>
-                <td
-                  colSpan={columns.length}
-                  className="h-24 text-center p-4 align-middle"
-                >
-                  No results.
-                </td>
-              </tr>
+              <>
+                <tr>
+                  <td
+                    colSpan={columns.length}
+                    className="h-24 text-center p-4 align-middle"
+                  >
+                    No results.
+                  </td>
+                </tr>
+                {/* Add New Row Button when empty */}
+                {isEditMode && (
+                  <tr 
+                    onClick={() => setAddRowDialogOpen(true)}
+                    className="group cursor-pointer border-t-2 border-dashed border-primary/30 hover:border-primary/60 bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 hover:from-primary/10 hover:via-primary/15 hover:to-primary/10 transition-all duration-300 ease-in-out"
+                  >
+                    <td 
+                      colSpan={columns.length}
+                      className="p-4 text-center"
+                      style={{ height: rowHeight }}
+                    >
+                      <div className="flex items-center justify-center gap-2 text-primary group-hover:text-primary/80 transition-colors">
+                        <Plus className="h-5 w-5 animate-pulse group-hover:scale-110 transition-transform" />
+                        <span className="text-sm font-semibold tracking-wide">Add New Row</span>
+                        <Plus className="h-5 w-5 animate-pulse group-hover:scale-110 transition-transform" />
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </>
             )}
           </tbody>
         </table>
       </div>
         {/* Table Footer */}
         <div className="border-t border-border bg-muted/30 dark:bg-muted/20 px-4 py-3">
-          <div className="flex items-center justify-between text-sm">
+          <div className="flex items-center justify-end text-sm">
             <div className="flex items-center gap-2 text-muted-foreground">
-              <span className="font-medium">Rows =</span>
               <span className="font-semibold text-foreground">{tableData.length}</span>
+              <span className="font-medium">Locations</span>
             </div>
           </div>
         </div>
@@ -799,8 +836,6 @@ export function DataTable({ data, onLocationClick, onEditRow, onDeleteRow, onAdd
                   <SelectItem value="Weekday">Weekday</SelectItem>
                   <SelectItem value="Alt 1">Alt 1</SelectItem>
                   <SelectItem value="Alt 2">Alt 2</SelectItem>
-                  <SelectItem value="Weekly">Weekly</SelectItem>
-                  <SelectItem value="Monthly">Monthly</SelectItem>
                 </SelectContent>
               </Select>
             </div>

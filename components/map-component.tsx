@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo, useRef } from "react"
 import { Delivery } from "@/app/data"
 
 interface MapComponentProps {
@@ -9,8 +9,10 @@ interface MapComponentProps {
 }
 
 export function MapComponent({ locations, selectedLocation }: MapComponentProps) {
-  // Calculate center from locations
-  const calculateCenter = () => {
+  const iframeRef = useRef<HTMLIFrameElement>(null)
+  
+  // Calculate center from locations - memoized
+  const defaultCenter = useMemo(() => {
     const validLocations = locations.filter(loc => 
       loc.lat !== 0 && loc.lng !== 0 && 
       parseFloat(loc.lat.toString()) !== 0 && 
@@ -24,33 +26,40 @@ export function MapComponent({ locations, selectedLocation }: MapComponentProps)
     const avgLat = validLocations.reduce((sum, loc) => sum + loc.lat, 0) / validLocations.length
     const avgLng = validLocations.reduce((sum, loc) => sum + loc.lng, 0) / validLocations.length
     return { lat: avgLat, lng: avgLng }
-  }
+  }, [locations])
   
-  const [mapCenter, setMapCenter] = useState(calculateCenter())
+  const [mapCenter, setMapCenter] = useState(defaultCenter)
   const [zoom, setZoom] = useState(10)
+  const updateTimerRef = useRef<NodeJS.Timeout | null>(null)
 
   // Update map when selectedLocation changes
   useEffect(() => {
-    console.log('🗺️ MapComponent - selectedLocation changed:', selectedLocation)
+    if (updateTimerRef.current) {
+      clearTimeout(updateTimerRef.current)
+    }
+    
     if (selectedLocation && selectedLocation.lat !== 0 && selectedLocation.lng !== 0) {
-      console.log('✈️ Flying to:', { lat: selectedLocation.lat, lng: selectedLocation.lng })
-      setMapCenter({ lat: selectedLocation.lat, lng: selectedLocation.lng })
-      setZoom(16) // Closer zoom for selected location
+      updateTimerRef.current = setTimeout(() => {
+        setMapCenter({ lat: selectedLocation.lat, lng: selectedLocation.lng })
+        setZoom(16)
+      }, 400)
+    } else if (!selectedLocation) {
+      // Reset to default when no selection
+      updateTimerRef.current = setTimeout(() => {
+        setMapCenter(defaultCenter)
+        setZoom(10)
+      }, 400)
     }
-  }, [selectedLocation])
-
-  // Update map when locations change
-  useEffect(() => {
-    if (!selectedLocation) {
-      const newCenter = calculateCenter()
-      setMapCenter(newCenter)
-      setZoom(10) // Default zoom for overview
+    
+    return () => {
+      if (updateTimerRef.current) {
+        clearTimeout(updateTimerRef.current)
+      }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [locations])
+  }, [selectedLocation, defaultCenter])
 
-  // Calculate bbox based on zoom level
-  const getBbox = () => {
+  // Calculate bbox
+  const bbox = useMemo(() => {
     const zoomFactors: Record<number, number> = {
       10: 0.1,
       13: 0.02,
@@ -63,23 +72,31 @@ export function MapComponent({ locations, selectedLocation }: MapComponentProps)
       maxLng: mapCenter.lng + factor,
       maxLat: mapCenter.lat + factor * 0.5,
     }
-  }
-
-  const bbox = getBbox()
+  }, [mapCenter, zoom])
+  
+  // Stable map URL with rounded coordinates
+  const mapUrl = useMemo(() => {
+    const roundedLat = Math.round(mapCenter.lat * 10000) / 10000
+    const roundedLng = Math.round(mapCenter.lng * 10000) / 10000
+    return `https://www.openstreetmap.org/export/embed.html?bbox=${bbox.minLng},${bbox.minLat},${bbox.maxLng},${bbox.maxLat}&layer=mapnik&marker=${roundedLat},${roundedLng}`
+  }, [mapCenter.lat, mapCenter.lng, bbox])
 
   return (
-    <div className="relative w-full h-full overflow-hidden rounded-lg">
+    <div className="relative w-full h-full rounded-lg overflow-hidden bg-muted/20">
       <iframe
-        key={`${mapCenter.lat}-${mapCenter.lng}-${zoom}`}
+        ref={iframeRef}
+        key={mapUrl}
         width="100%"
         height="100%"
-        style={{ border: 0 }}
+        style={{ 
+          border: 0,
+          display: 'block',
+          marginBottom: '-50px'
+        }}
         loading="lazy"
-        src={`https://www.openstreetmap.org/export/embed.html?bbox=${bbox.minLng},${bbox.minLat},${bbox.maxLng},${bbox.maxLat}&layer=mapnik&marker=${mapCenter.lat},${mapCenter.lng}`}
-        className="animate-in fade-in zoom-in-95 duration-700 ease-out"
+        allowFullScreen
+        src={mapUrl}
       />
-      {/* Hide OpenStreetMap footer completely */}
-      <div className="absolute bottom-0 left-0 right-0 h-12 bg-background"></div>
     </div>
   )
 }
