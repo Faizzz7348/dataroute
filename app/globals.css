@@ -162,10 +162,13 @@ body {
   /* Apply safe area to sidebar and main content */
   [data-slot="sidebar-container"] {
     height: 100dvh;
+    padding-top: env(safe-area-inset-top, 0px);
   }
   
   [data-slot="sidebar-inset"] {
     height: 100dvh;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 }
 
