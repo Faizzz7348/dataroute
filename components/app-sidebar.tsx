@@ -488,7 +488,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                 <SidebarMenuSubButton asChild>
                                   <Link href={subItem.url} className="font-medium flex items-center justify-between w-full">
                                     <span>{subItem.title}</span>
-                                    <span className="ml-auto px-1.5 py-0.5 text-[10px] font-semibold rounded-full bg-primary/10 text-primary min-w-[20px] text-center">
+                                    <span className={`ml-auto px-2 py-0.5 text-[11px] font-semibold rounded-full min-w-[22px] text-center ${
+                                      count >= 16 
+                                        ? 'bg-red-500/20 text-red-600 dark:text-red-400' 
+                                        : 'bg-primary/10 text-primary'
+                                    }`}>
                                       {count}
                                     </span>
                                   </Link>

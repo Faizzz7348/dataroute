@@ -137,4 +137,4 @@ export default withPWA({
       },
     },
   ],
-})(nextConfig as any);
+})(nextConfig);

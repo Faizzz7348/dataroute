@@ -751,6 +751,7 @@ export function DataTable({ data, onLocationClick, onEditRow, onDeleteRow, onAdd
               <Input
                 id="code"
                 type="number"
+                autoFocus={false}
                 value={newRowData.code}
                 onChange={(e) => {
                   const code = e.target.value
@@ -817,6 +818,7 @@ export function DataTable({ data, onLocationClick, onEditRow, onDeleteRow, onAdd
               <Label htmlFor="location">Location</Label>
               <Input
                 id="location"
+                autoFocus={false}
                 value={newRowData.location}
                 onChange={(e) => setNewRowData({ ...newRowData, location: e.target.value })}
                 placeholder="Enter location"

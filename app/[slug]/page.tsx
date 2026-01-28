@@ -401,6 +401,7 @@ export default function RoutePage() {
                   <Input
                     id="code"
                     type="number"
+                    autoFocus={false}
                     value={editingRow.code}
                     onChange={(e) => {
                       const newCode = parseInt(e.target.value) || 0
@@ -455,6 +456,7 @@ export default function RoutePage() {
                   <Label htmlFor="location-name">Location Name</Label>
                   <Input
                     id="location-name"
+                    autoFocus={false}
                     value={editingRow.location}
                     onChange={(e) =>
                       setEditingRow({ ...editingRow, location: e.target.value })
