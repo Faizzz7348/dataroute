@@ -163,7 +163,7 @@ export function MoveRowModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[85vh] flex flex-col">
+      <DialogContent className="sm:max-w-[700px] max-h-[85vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
             <ArrowRight className="h-5 w-5 text-primary" />
@@ -205,7 +205,7 @@ export function MoveRowModal({
           </div>
 
           {/* Data Table with improved styling */}
-          <div className="flex-1 overflow-auto border-2 rounded-lg shadow-sm">
+          <div className="max-h-[calc(85vh-220px)] overflow-auto border-2 rounded-lg shadow-sm">
             <Table>
               <TableHeader className="sticky top-0 bg-muted/80 backdrop-blur-sm z-10">
                 <TableRow className="h-10">

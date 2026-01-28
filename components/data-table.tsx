@@ -648,7 +648,7 @@ export function DataTable({ data, onLocationClick, onEditRow, onDeleteRow, onAdd
 
       {/* Column Settings Dialog */}
       <Dialog open={columnDialogOpen} onOpenChange={setColumnDialogOpen}>
-        <DialogContent className="backdrop-blur-sm" onOpenAutoFocus={(e) => e.preventDefault()}>
+        <DialogContent className="sm:max-w-[700px] backdrop-blur-sm" onOpenAutoFocus={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle>Column Settings</DialogTitle>
             <DialogDescription>
@@ -826,7 +826,7 @@ export function DataTable({ data, onLocationClick, onEditRow, onDeleteRow, onAdd
 
       {/* Row Settings Dialog */}
       <Dialog open={rowDialogOpen} onOpenChange={setRowDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[85vh] flex flex-col backdrop-blur-sm" onOpenAutoFocus={(e) => e.preventDefault()} showCloseButton={false}>
+        <DialogContent className="sm:max-w-[700px] max-h-[85vh] flex flex-col backdrop-blur-sm" onOpenAutoFocus={(e) => e.preventDefault()} showCloseButton={false}>
           <DialogHeader className="space-y-2 pb-3 border-b flex-shrink-0">
             <DialogTitle className="text-lg">
               Row Settings

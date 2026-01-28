@@ -350,28 +350,15 @@ export default function RoutePage() {
           <ModeToggle />
         </header>
         <div className="flex flex-1 flex-col p-4 pt-6 pb-safe overflow-y-auto transition-all duration-300 ease-in-out">
-          <div className="flex flex-1 flex-col gap-4">
-          <div 
-            className={`overflow-hidden transition-all duration-700 ease-in-out ${
-              showMap 
-                ? 'max-h-[600px] opacity-100 scale-100 mb-4' 
-                : 'max-h-0 opacity-0 scale-95 mb-0'
-            }`}
-            style={{
-              transformOrigin: 'top center',
-            }}
-          >
+          <div className="flex flex-1 flex-col gap-2">
+          {showMap && (
             <div 
-              className={`overflow-hidden transition-all duration-700 ease-in-out ${
-                showMap ? 'translate-y-0 opacity-100' : '-translate-y-4 opacity-0'
-              }`}
+              className="overflow-hidden animate-in slide-in-from-top-4 fade-in duration-400 mb-2"
               style={{ height: "600px" }}
             >
-              {showMap && (
-                <MapComponent locations={deliveryData} selectedLocation={selectedLocation} />
-              )}
+              <MapComponent locations={deliveryData} selectedLocation={selectedLocation} />
             </div>
-          </div>
+          )}
 
           <div>
             {isLoading ? (

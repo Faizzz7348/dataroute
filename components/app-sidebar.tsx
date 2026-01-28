@@ -442,7 +442,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     <SidebarMenuItem>
                       <CollapsibleTrigger asChild>
                         <SidebarMenuButton className="font-bold">
-                          {Icon && <Icon className="h-4 w-4" />}
+                          {Icon && <Icon 
+                            className="h-4 w-4 !text-current" 
+                            style={{
+                              color: item.title === "Home" ? "#3b82f6 !important" : 
+                                     item.title === "Route VM" ? "#22c55e !important" : undefined
+                            }} 
+                          />}
                           <span className="flex-1">{item.title}</span>
                           <ChevronRight className="ml-auto h-4 w-4 transition-transform duration-300 ease-in-out group-data-[state=open]/collapsible:rotate-90" />
                         </SidebarMenuButton>
@@ -508,7 +514,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 <DropdownMenuTrigger asChild>
                   <SidebarMenuButton 
                     size="lg" 
-                    className="cursor-pointer bg-gradient-to-r from-blue-500/10 to-purple-500/10 hover:from-blue-500/20 hover:to-purple-500/20 dark:from-blue-500/20 dark:to-purple-500/20 dark:hover:from-blue-500/30 dark:hover:to-purple-500/30 border border-blue-500/20 dark:border-blue-500/30"
+                    className="cursor-pointer"
                   >
                     <Settings className={`h-5 w-5 transition-transform duration-500 ease-in-out ${settingsOpen ? 'rotate-180' : 'rotate-0'}`} />
                     <span className="font-bold">Settings</span>

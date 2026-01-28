@@ -94,7 +94,7 @@ export function PowerModeModal({ visible, onHide, rowData, onSave }: PowerModeMo
 
   return (
     <Dialog open={visible} onOpenChange={handleCancel}>
-      <DialogContent className="sm:max-w-[520px] shadow-2xl backdrop-blur-sm" onOpenAutoFocus={(e) => e.preventDefault()}>
+      <DialogContent className="sm:max-w-[700px] shadow-2xl backdrop-blur-sm" onOpenAutoFocus={(e) => e.preventDefault()}>
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">Power Mode Configuration</DialogTitle>
           <DialogDescription className="text-sm">
