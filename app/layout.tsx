@@ -10,6 +10,7 @@ import { PageLoading } from "@/components/page-loading";
 import { Toaster } from "@/components/ui/sonner";
 import { PWAInstallPrompt } from "@/components/pwa-install-prompt";
 import { DeviceOptimizer } from "@/components/device-optimizer";
+import { ThemeColor } from "@/components/theme-color";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -58,6 +59,7 @@ export default function RootLayout({
           <PageLoadingProvider>
             <EditModeProvider>
               <DeviceOptimizer />
+              <ThemeColor />
               {children}
               <EditModeLoading />
               <PageLoading />
