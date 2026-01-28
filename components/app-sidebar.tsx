@@ -442,13 +442,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     <SidebarMenuItem>
                       <CollapsibleTrigger asChild>
                         <SidebarMenuButton className="font-bold">
-                          {Icon && <Icon 
-                            className="h-4 w-4 !text-current" 
-                            style={{
-                              color: item.title === "Home" ? "#3b82f6 !important" : 
-                                     item.title === "Route VM" ? "#22c55e !important" : undefined
-                            }} 
-                          />}
+                          {Icon && (
+                            <div 
+                              className="h-4 w-4 flex items-center justify-center"
+                              style={{
+                                color: item.title === "Home" ? "#3b82f6" : 
+                                       item.title === "Route VM" ? "#22c55e" : undefined
+                              }}
+                            >
+                              <Icon className="h-full w-full" />
+                            </div>
+                          )}
                           <span className="flex-1">{item.title}</span>
                           <ChevronRight className="ml-auto h-4 w-4 transition-transform duration-300 ease-in-out group-data-[state=open]/collapsible:rotate-90" />
                         </SidebarMenuButton>
