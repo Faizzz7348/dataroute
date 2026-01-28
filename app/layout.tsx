@@ -8,6 +8,7 @@ import { EditModeLoading } from "@/components/edit-mode-loading";
 import { PageLoading } from "@/components/page-loading";
 import { Toaster } from "@/components/ui/sonner";
 import { PWAInstallPrompt } from "@/components/pwa-install-prompt";
+import { DeviceOptimizer } from "@/components/device-optimizer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,7 +29,8 @@ export const viewport: Viewport = {
     { media: "(prefers-color-scheme: light)", color: "#fafbfc" },
     { media: "(prefers-color-scheme: dark)", color: "#0d1117" }
   ],
-  viewportFit: "cover"
+  viewportFit: "cover",
+  interactiveWidget: "resizes-content"
 };
 
 export const metadata: Metadata = {
@@ -94,6 +96,7 @@ export default function RootLayout({
         >
           <PageLoadingProvider>
             <EditModeProvider>
+              <DeviceOptimizer />
               {children}
               <EditModeLoading />
               <PageLoading />

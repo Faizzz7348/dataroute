@@ -396,9 +396,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   }
 
   return (
-    <Sidebar {...props}>
+    <Sidebar {...props} className="pt-safe pb-safe">
       <div className="flex flex-col h-full">
-        <SidebarHeader className="shrink-0">
+        <SidebarHeader className="shrink-0 pl-safe">
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton size="lg" asChild>
@@ -417,7 +417,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SearchForm onSearch={setSearchQuery} />
         </SidebarHeader>
         
-        <SidebarContent className="flex-1 overflow-y-auto min-h-0">
+        <SidebarContent className="flex-1 overflow-y-auto min-h-0 pl-safe">
           <SidebarGroup>
             <SidebarMenu>
               {navData.map((item) => {

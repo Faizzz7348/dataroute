@@ -34,7 +34,7 @@ export default function Page() {
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <header className="sticky top-0 z-50 flex h-16 shrink-0 items-center gap-2 border-b bg-background backdrop-blur-xl shadow-lg px-4 before:absolute before:inset-x-0 before:bottom-0 before:h-[200px] before:bg-background before:-translate-y-full before:-z-10">
+        <header className="sticky top-0 z-50 flex h-16 shrink-0 items-center gap-2 border-b bg-background backdrop-blur-xl shadow-lg px-4 pt-safe before:absolute before:inset-x-0 before:bottom-0 before:h-[200px] before:bg-background before:-translate-y-full before:-z-10">
           <SidebarTrigger className="-ml-1" />
           <Separator
             orientation="vertical"
