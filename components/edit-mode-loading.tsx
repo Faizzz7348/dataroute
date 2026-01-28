@@ -7,8 +7,18 @@ import { useEditMode } from "@/contexts/edit-mode-context"
 export function EditModeLoading() {
   const { isLoading, isEditMode, savingMessage } = useEditMode()
   const [dots, setDots] = React.useState("")
+  const [shouldRender, setShouldRender] = React.useState(false)
   const isSuccess = savingMessage && savingMessage.includes('✅')
   const isSaving = savingMessage && savingMessage.length > 0
+
+  React.useEffect(() => {
+    if (isLoading) {
+      setShouldRender(true)
+    } else {
+      const timer = setTimeout(() => setShouldRender(false), 300)
+      return () => clearTimeout(timer)
+    }
+  }, [isLoading])
 
   React.useEffect(() => {
     if (!isLoading) return
@@ -20,11 +30,13 @@ export function EditModeLoading() {
     return () => clearInterval(interval)
   }, [isLoading])
 
-  if (!isLoading) return null
+  if (!shouldRender) return null
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center animate-in fade-in duration-200">
-      <div className="absolute inset-0 bg-background/95 backdrop-blur-md" />
+    <div className={`fixed inset-0 z-[200] flex items-center justify-center transition-opacity duration-300 ${
+      isLoading ? 'opacity-100' : 'opacity-0'
+    }`}>
+      <div className="absolute inset-0 bg-background backdrop-blur-md" />
       <div className="relative z-10 flex flex-col items-center gap-4">
         {isSaving ? (
           <>

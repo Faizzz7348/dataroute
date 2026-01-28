@@ -24,8 +24,8 @@ export default function Page() {
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    showPageLoading("Opening Dashboard", 800)
-    setTimeout(() => setMounted(true), 800)
+    showPageLoading("Opening Dashboard", 1000)
+    setTimeout(() => setMounted(true), 1000)
   }, [showPageLoading])
 
   if (!mounted) return null
@@ -34,7 +34,7 @@ export default function Page() {
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <header className="sticky top-0 z-[100] flex h-16 shrink-0 items-center gap-2 border-b border-sky-200/40 dark:border-blue-900/50 bg-gradient-to-r from-sky-50/98 via-blue-50/95 to-cyan-50/98 dark:from-slate-950/98 dark:via-blue-950/95 dark:to-indigo-950/98 backdrop-blur-xl shadow-lg shadow-sky-500/20 dark:shadow-blue-900/40 px-4">
+        <header className="fixed top-0 left-0 right-0 z-50 flex h-16 shrink-0 items-center gap-2 border-b bg-background backdrop-blur-xl shadow-lg px-4 md:left-64">
           <SidebarTrigger className="-ml-1" />
           <Separator
             orientation="vertical"
@@ -55,13 +55,13 @@ export default function Page() {
           </Breadcrumb>
           <ModeToggle />
         </header>
-        <div className="flex flex-1 flex-col gap-4 p-4">
+        <div className="pt-16 flex flex-1 flex-col gap-4 p-4">
           <div className="grid auto-rows-min gap-4 md:grid-cols-3">
-            <div className="bg-gradient-to-br from-sky-50/60 via-blue-50/40 to-slate-50/50 dark:from-blue-950/60 dark:via-indigo-950/40 dark:to-slate-950/50 aspect-video rounded-xl border border-sky-200/30 dark:border-blue-800/30 shadow-md backdrop-blur-sm" />
-            <div className="bg-gradient-to-br from-blue-50/60 via-sky-50/40 to-slate-50/50 dark:from-blue-950/60 dark:via-blue-900/40 dark:to-slate-950/50 aspect-video rounded-xl border border-blue-200/30 dark:border-blue-800/30 shadow-md backdrop-blur-sm" />
-            <div className="bg-gradient-to-br from-slate-50/60 via-sky-50/40 to-blue-50/50 dark:from-slate-950/60 dark:via-blue-950/40 dark:to-indigo-950/50 aspect-video rounded-xl border border-slate-200/30 dark:border-blue-800/30 shadow-md backdrop-blur-sm" />
+            <div className="bg-muted aspect-video rounded-xl border shadow-md" />
+            <div className="bg-muted aspect-video rounded-xl border shadow-md" />
+            <div className="bg-muted aspect-video rounded-xl border shadow-md" />
           </div>
-          <div className="bg-gradient-to-br from-slate-50/60 via-sky-50/30 to-blue-50/30 dark:from-slate-950/70 dark:via-blue-950/50 dark:to-indigo-950/40 min-h-[100vh] flex-1 rounded-xl border border-sky-200/30 dark:border-blue-800/40 shadow-lg backdrop-blur-sm md:min-h-min" />
+          <div className="bg-muted min-h-[100vh] flex-1 rounded-xl border shadow-lg md:min-h-min" />
         </div>
       </SidebarInset>
     </SidebarProvider>

@@ -452,7 +452,7 @@ export function DataTable({ data, onLocationClick, onEditRow, onDeleteRow, onAdd
                 setSelectedInfoRow(delivery)
                 setInfoModalOpen(true)
               }}
-              className="p-2 rounded-lg hover:bg-blue-500/10 hover:text-blue-600 transition-all duration-200 group"
+              className="p-2 rounded-lg hover:bg-muted transition-all duration-200 group"
               title="Info"
             >
               <Info className="h-4 w-4 group-hover:scale-110 transition-transform" />
@@ -581,7 +581,7 @@ export function DataTable({ data, onLocationClick, onEditRow, onDeleteRow, onAdd
               <tr key={headerGroup.id} className="border-b sticky top-0 z-[30]">
                 {headerGroup.headers.map((header) => {
                   return (
-                    <th key={header.id} className="h-11 px-4 text-center align-middle font-semibold text-foreground bg-muted/30 dark:bg-muted/20" style={{ fontSize: '12px' }}>
+                    <th key={header.id} className="h-11 px-4 text-center align-middle font-semibold text-foreground bg-muted/30 dark:bg-muted/20 backdrop-blur-xl" style={{ fontSize: '12px' }}>
                       {header.isPlaceholder
                         ? null
                         : flexRender(
@@ -636,58 +636,13 @@ export function DataTable({ data, onLocationClick, onEditRow, onDeleteRow, onAdd
         </table>
       </div>
         {/* Table Footer */}
-        <div className="border-t border-border bg-muted/30 dark:bg-muted/20 px-4 py-4 space-y-3">
-          <div className="flex flex-wrap items-center justify-end gap-3">
-              <div className="flex items-center gap-2">
-                <div className="h-6 w-1 bg-gradient-to-b from-primary to-primary/40 rounded-full" />
-                <Label className="text-sm font-semibold text-foreground">Row Count</Label>
-              </div>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => adjustRowCount('down')}
-                disabled={rowCount <= 1}
-                className="h-9 w-9 rounded-full hover:scale-105 transition-transform disabled:opacity-40 border-border"
-              >
-                <Minus className="h-4 w-4" />
-              </Button>
-              <Input
-                type="number"
-                value={rowCount}
-                onChange={handleRowInputChange}
-                className={`w-24 text-center text-base font-bold h-10 rounded-lg bg-background ${rowCountDiff > 0 ? 'border-destructive text-destructive' : isRowCountDirty ? 'border-primary/40' : 'border-border'}`}
-                min={1}
-                max={1000}
-              />
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => adjustRowCount('up')}
-                disabled={rowCount >= 1000}
-                className="h-9 w-9 rounded-full hover:scale-105 transition-transform disabled:opacity-40 border-border"
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
-              <Button
-                onClick={applyRowCount}
-                disabled={!isRowCountDirty || rowCountDiff > 0}
-                className="h-9 px-4 text-sm font-semibold"
-              >
-                Apply Row Count
-              </Button>
+        <div className="border-t border-border bg-muted/30 dark:bg-muted/20 px-4 py-3">
+          <div className="flex items-center justify-between text-sm">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <span className="font-medium">Rows =</span>
+              <span className="font-semibold text-foreground">{tableData.length}</span>
             </div>
-          {isRowCountDirty && (
-            <div className="flex flex-wrap items-center justify-center gap-2 text-xs">
-              {rowCountDiff > 0 ? (
-                <span className="text-destructive dark:text-red-400 font-medium">⚠️ Cannot add {rowCountDiff} more row{rowCountDiff !== 1 ? 's' : ''}. Please add rows first using &quot;Add New Row&quot; option.</span>
-              ) : (
-                <>
-                  <span className="text-muted-foreground dark:text-gray-400">Akan buang {Math.abs(rowCountDiff)} baris terakhir.</span>
-                  <span className="text-muted-foreground dark:text-gray-400">Tekan Apply untuk simpan.</span>
-                </>
-              )}
-            </div>
-          )}
+          </div>
         </div>
       </div>
 
@@ -879,20 +834,12 @@ export function DataTable({ data, onLocationClick, onEditRow, onDeleteRow, onAdd
             <DialogDescription className="text-sm text-muted-foreground">
               Susun semula urutan baris. Perubahan akan disimpan apabila anda menekan Apply.
             </DialogDescription>
-            <div className="flex flex-wrap gap-2 pt-1">
-              <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary border border-primary/20">
-                Total: {tempRowData.length} rows
-              </span>
-              <span className="inline-flex items-center gap-1 rounded-full bg-muted/60 px-3 py-1 text-xs font-medium text-muted-foreground border border-border/70">
-                Editable via order number
-              </span>
-            </div>
           </DialogHeader>
 
           <div className="flex-1 overflow-auto py-6 space-y-6">
             {/* Reorder list */}
             <div className="space-y-4">
-              <div className="flex-1 overflow-auto border-2 rounded-lg shadow-sm">
+              <div className="flex-1 overflow-auto border-2 rounded-lg shadow-sm max-h-[320px]">
                 <table className="w-full caption-bottom text-sm relative">
                   <thead>
                     <tr className="border-b sticky top-0 z-10 bg-muted/80 backdrop-blur-sm text-xs uppercase tracking-wide text-muted-foreground">
@@ -946,7 +893,7 @@ export function DataTable({ data, onLocationClick, onEditRow, onDeleteRow, onAdd
                   setTempRowData([...tableData])
                   setOrderInputs({})
                 }}
-                className="px-6 h-11 text-base font-semibold text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:text-blue-400 dark:hover:text-blue-300 dark:hover:bg-blue-950"
+                className="px-6 h-11 text-base font-semibold"
               >
                 Reset
               </Button>
@@ -1161,6 +1108,9 @@ export function DataTable({ data, onLocationClick, onEditRow, onDeleteRow, onAdd
                   })
                   
                   if (response.ok) {
+                    // Trigger sidebar refresh event
+                    window.dispatchEvent(new Event('routeUpdated'))
+                    
                     setEditRouteDialogOpen(false)
                     // If slug changed, redirect to new URL
                     if (routeInfo.slug !== currentRouteSlug) {
@@ -1181,7 +1131,6 @@ export function DataTable({ data, onLocationClick, onEditRow, onDeleteRow, onAdd
                 }
               }}
               disabled={isUpdatingRoute || !routeInfo.name.trim() || !routeInfo.slug.trim() || !!slugError}
-              className="bg-blue-600 hover:bg-blue-700"
             >
               {isUpdatingRoute ? (
                 <span className="flex items-center gap-2">
@@ -1247,6 +1196,8 @@ export function DataTable({ data, onLocationClick, onEditRow, onDeleteRow, onAdd
                   
                   if (response.ok) {
                     const result = await response.json()
+                    // Trigger sidebar refresh event
+                    window.dispatchEvent(new Event('routeUpdated'))
                     // Show success message
                     alert(`✅ ${result.message}`)
                     // Redirect to home

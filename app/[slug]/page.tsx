@@ -24,7 +24,6 @@ import {
 import { Map, MapPin } from "lucide-react"
 import dynamic from "next/dynamic"
 import { DataTable } from "@/components/data-table"
-import { DataTableSkeleton } from "@/components/data-table-skeleton"
 import { Delivery } from "@/app/data"
 import { Button } from "@/components/ui/button"
 import {
@@ -78,8 +77,8 @@ export default function RoutePage() {
   const duplicateCheckTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
-    showPageLoading(`Opening Route ${slug.toUpperCase()}`, 800)
-    setTimeout(() => setMounted(true), 800)
+    showPageLoading(`Opening Route ${slug.toUpperCase()}`, 1000)
+    setTimeout(() => setMounted(true), 1000)
   }, [showPageLoading, slug])
 
   // Fetch data from database
@@ -255,7 +254,7 @@ export default function RoutePage() {
       <SidebarProvider>
         <AppSidebar />
         <SidebarInset>
-          <header className="sticky top-0 z-[100] flex h-16 shrink-0 items-center gap-2 border-b bg-background/98 backdrop-blur-xl supports-[backdrop-filter]:bg-background/95 shadow-sm px-4">
+          <header className="fixed top-0 left-0 right-0 z-50 flex h-16 shrink-0 items-center gap-2 border-b bg-background backdrop-blur-xl shadow-sm px-4 md:left-64">
             <SidebarTrigger className="-ml-1" />
             <Separator
               orientation="vertical"
@@ -276,7 +275,7 @@ export default function RoutePage() {
             </Breadcrumb>
             <ModeToggle />
           </header>
-          <div className="flex flex-1 flex-col gap-4 p-4">
+          <div className="pt-16 flex flex-1 flex-col gap-4 p-4">
             <div className="flex flex-col items-center justify-center flex-1 gap-4">
               <h1 className="text-4xl font-bold text-destructive">Route Not Found</h1>
               <p className="text-muted-foreground">The route <strong>{slug}</strong> does not exist.</p>
@@ -294,7 +293,7 @@ export default function RoutePage() {
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <header className="sticky top-0 z-[100] flex h-16 shrink-0 items-center gap-2 border-b bg-background/98 backdrop-blur-xl shadow-sm px-4">
+        <header className="fixed top-0 left-0 right-0 z-50 flex h-16 shrink-0 items-center gap-2 border-b bg-background backdrop-blur-xl shadow-sm px-4 md:left-64">
           <SidebarTrigger className="-ml-1" />
           <Separator
             orientation="vertical"
@@ -334,7 +333,7 @@ export default function RoutePage() {
           </div>
           <ModeToggle />
         </header>
-        <div className="flex flex-1 flex-col gap-4 p-4">
+        <div className="pt-16 flex flex-1 flex-col gap-4 p-4 overflow-y-auto">
           <div 
             className={`overflow-hidden transition-all duration-500 ease-in-out ${
               showMap 
@@ -359,7 +358,9 @@ export default function RoutePage() {
 
           <div>
             {isLoading ? (
-              <DataTableSkeleton rows={8} columns={7} />
+              <div className="flex items-center justify-center h-[400px]">
+                <p className="text-muted-foreground">Loading data...</p>
+              </div>
             ) : (
               <DataTable 
                 data={deliveryData} 

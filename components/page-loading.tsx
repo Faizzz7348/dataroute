@@ -21,9 +21,8 @@ export function PageLoading() {
   if (!isLoading) return null
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center animate-in fade-in duration-200">
-      <div className="absolute inset-0 bg-background/90 backdrop-blur-md" />
-      <div className="relative z-10 flex flex-col items-center gap-3">
+    <div className="fixed inset-0 z-[999] flex items-center justify-center bg-white dark:bg-black">
+      <div className="flex flex-col items-center gap-3">
         <Loader2 className="h-12 w-12 text-primary animate-spin" />
         <p className="text-sm font-medium text-muted-foreground animate-pulse">
           {loadingMessage}{dots}

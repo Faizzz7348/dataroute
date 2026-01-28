@@ -84,16 +84,7 @@ const data = {
       title: "Route VM",
       url: "#",
       icon: MapPin,
-      items: [
-        {
-          title: "KL 7 - 3PVK04",
-          url: "/kl-7",
-        },
-        {
-          title: "SL 1 - 3AVS01",
-          url: "/sl-1",
-        },
-      ],
+      items: [],
     },
   ],
 }
@@ -106,17 +97,20 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const [openMenu, setOpenMenu] = React.useState<string | null>("Route VM")
   const [settingsOpen, setSettingsOpen] = React.useState(false)
   const [searchQuery, setSearchQuery] = React.useState("")
+  const [routesKey, setRoutesKey] = React.useState(0) // For forcing re-fetch
   
   // Fetch routes from database
   React.useEffect(() => {
     const fetchRoutes = async () => {
       try {
-        const response = await fetch('/api/routes', {
-          // ✅ FIX: Add cache busting to prevent stale data
+        // Add timestamp to bust cache completely
+        const timestamp = new Date().getTime()
+        const response = await fetch(`/api/routes?_=${timestamp}`, {
           cache: 'no-store',
           headers: {
             'Cache-Control': 'no-cache, no-store, must-revalidate',
-            'Pragma': 'no-cache'
+            'Pragma': 'no-cache',
+            'Expires': '0'
           }
         })
         if (!response.ok) throw new Error('Failed to fetch routes')
@@ -162,16 +156,24 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     // This ensures sidebar updates after route rename/edit
     const handleFocus = () => {
       console.log('🔄 Window focused - refreshing routes')
-      fetchRoutes()
+      setRoutesKey(prev => prev + 1) // Trigger re-fetch
+    }
+    
+    // Listen for custom event from route updates
+    const handleRouteUpdate = () => {
+      console.log('🔄 Route updated - refreshing routes')
+      setRoutesKey(prev => prev + 1) // Trigger re-fetch
     }
     
     window.addEventListener('focus', handleFocus)
+    window.addEventListener('routeUpdated', handleRouteUpdate)
     
     // Cleanup
     return () => {
       window.removeEventListener('focus', handleFocus)
+      window.removeEventListener('routeUpdated', handleRouteUpdate)
     }
-  }, [])
+  }, [routesKey]) // Re-run when routesKey changes
   
   // Debug log
   React.useEffect(() => {
@@ -369,6 +371,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       setAddRouteSlugError("")
       setAddRouteOpen(false)
       
+      // Trigger sidebar refresh event
+      window.dispatchEvent(new Event('routeUpdated'))
+      
       // Show success message and redirect
       alert(`✅ Route "${newRoute.name}" created successfully! Redirecting...`)
       
@@ -421,7 +426,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   subItem.title.toLowerCase().includes(searchQuery.toLowerCase())
                 ) || []
                 console.log('Rendering menu item:', item.title, 'items count:', filteredItems.length)
-                return filteredItems.length ? (
+                
+                // Show Route VM menu even if empty (for Add New Route button)
+                const shouldShowMenu = filteredItems.length > 0 || (item.title === "Route VM" && isEditMode)
+                
+                return shouldShowMenu ? (
                   <Collapsible
                     key={item.title}
                     open={openMenu === item.title}
@@ -868,8 +877,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </DialogHeader>
           {!isLoading && (
             <div className="py-2">
-              <div className="rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 p-3">
-                <p className="text-sm text-blue-800 dark:text-blue-200">
+              <div className="rounded-lg border p-3">
+                <p className="text-sm">
                   <strong>Note:</strong> The page will refresh after saving to load the updated data.
                 </p>
               </div>
@@ -946,8 +955,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
-            <div className="rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 p-3">
-              <p className="text-sm text-blue-800 dark:text-blue-200">
+            <div className="rounded-lg border p-3">
+              <p className="text-sm">
                 <strong>💡 Tip:</strong> Your route name will auto-generate a URL slug. The page will automatically load data from the database using this slug.
               </p>
             </div>
