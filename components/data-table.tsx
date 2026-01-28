@@ -145,7 +145,6 @@ export function DataTable({ data, onLocationClick, onEditRow, onDeleteRow, onAdd
   const [newRowData, setNewRowData] = React.useState({ code: "", location: "", delivery: "" })
   const [newRowCodeError, setNewRowCodeError] = React.useState<string>('')
   const [checkingNewRowDuplicate, setCheckingNewRowDuplicate] = React.useState(false)
-  const [rowCount, setRowCount] = React.useState(data.length)
   const [tempRowData, setTempRowData] = React.useState<Delivery[]>([])
   const [orderInputs, setOrderInputs] = React.useState<{ [key: number]: string }>({})
   const [routeInfo, setRouteInfo] = React.useState({ name: "", slug: "", description: "" })
@@ -215,7 +214,6 @@ export function DataTable({ data, onLocationClick, onEditRow, onDeleteRow, onAdd
     })
     
     setTableData(sortedData)
-    setRowCount(sortedData.length)
   }, [data])
 
   const toggleColumnVisibility = (columnId: string) => {
