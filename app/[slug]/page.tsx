@@ -105,7 +105,7 @@ export default function RoutePage() {
         } else if (routeResponse.status === 404) {
           setNotFound(true)
         }
-      } catch (_error) {
+      } catch {
         setNotFound(true)
       } finally {
         setIsLoading(false)
@@ -142,7 +142,7 @@ export default function RoutePage() {
         return await response.json()
       }
       return { hasDuplicate: false, duplicates: [] }
-    } catch (_error) {
+    } catch {
       return { hasDuplicate: false, duplicates: [] }
     }
   }
@@ -188,7 +188,7 @@ export default function RoutePage() {
         setEditModalOpen(false)
         setEditingRow(null)
         setCodeError('')
-      } catch (_error) {
+      } catch {
         setCodeError('Failed to save changes. Please try again.')
       }
     }
@@ -245,7 +245,7 @@ export default function RoutePage() {
         const data = await response.json()
         setDeliveryData(data.sort((a: Delivery, b: Delivery) => a.code - b.code))
       }
-    } catch (_error) {
+    } catch {
       // Silently fail
     }
   }

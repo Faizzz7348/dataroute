@@ -39,7 +39,7 @@ export async function GET() {
       }
     })
     return NextResponse.json(locations)
-  } catch (_error) {
+  } catch {
     return NextResponse.json({ error: 'Failed to fetch locations' }, { status: 500 })
   }
 }
