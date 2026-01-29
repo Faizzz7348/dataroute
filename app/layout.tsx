@@ -26,8 +26,9 @@ const geistMono = Geist_Mono({
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
+  maximumScale: 5, // Allow zoom up to 500%
+  minimumScale: 0.5, // Allow zoom down to 50%
+  userScalable: true, // Enable user zoom/pinch
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#ffffff" },
     { media: "(prefers-color-scheme: dark)", color: "#020817" }
