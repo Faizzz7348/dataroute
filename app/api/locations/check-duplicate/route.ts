@@ -44,8 +44,7 @@ export async function GET(request: NextRequest) {
         routeSlug: d.route.slug
       }))
     });
-  } catch (error) {
-    console.error('Error checking duplicate:', error);
+  } catch (_error) {
     return NextResponse.json(
       { error: 'Failed to check duplicate' },
       { status: 500 }

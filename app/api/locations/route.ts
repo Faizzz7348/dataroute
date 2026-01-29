@@ -22,8 +22,7 @@ export async function POST(request: NextRequest) {
     })
 
     return NextResponse.json(newLocation, { status: 201 })
-  } catch (error) {
-    console.error('Error creating location:', error)
+  } catch (_error) {
     return NextResponse.json({ error: 'Failed to create location' }, { status: 500 })
   }
 }
@@ -40,8 +39,7 @@ export async function GET() {
       }
     })
     return NextResponse.json(locations)
-  } catch (error) {
-    console.error('Error fetching locations:', error)
+  } catch (_error) {
     return NextResponse.json({ error: 'Failed to fetch locations' }, { status: 500 })
   }
 }

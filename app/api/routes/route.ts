@@ -14,8 +14,7 @@ export async function GET() {
       }
     })
     return NextResponse.json(routes)
-  } catch (error) {
-    console.error('Error fetching routes:', error)
+  } catch (_error) {
     return NextResponse.json({ error: 'Failed to fetch routes' }, { status: 500 })
   }
 }
@@ -79,8 +78,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(route, { status: 201 })
   } catch (error: unknown) {
-    console.error('Error creating route:', error)
-    
     // Handle unique constraint violation (backup check)
     if (error && typeof error === 'object' && 'code' in error && error.code === 'P2002') {
       const meta = 'meta' in error && error.meta && typeof error.meta === 'object' && 'target' in error.meta ? error.meta.target : null

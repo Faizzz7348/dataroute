@@ -18,7 +18,7 @@ export default withPWA({
         cacheName: 'google-fonts-cache',
         expiration: {
           maxEntries: 10,
-          maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
+          maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days (optimized from 1 year)
         },
         cacheableResponse: {
           statuses: [0, 200],
@@ -32,7 +32,7 @@ export default withPWA({
         cacheName: 'gstatic-fonts-cache',
         expiration: {
           maxEntries: 10,
-          maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
+          maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days (optimized from 1 year)
         },
         cacheableResponse: {
           statuses: [0, 200],

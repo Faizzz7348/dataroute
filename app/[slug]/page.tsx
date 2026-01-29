@@ -105,8 +105,7 @@ export default function RoutePage() {
         } else if (routeResponse.status === 404) {
           setNotFound(true)
         }
-      } catch (error) {
-        console.error('Error fetching route data:', error)
+      } catch (_error) {
         setNotFound(true)
       } finally {
         setIsLoading(false)
@@ -117,26 +116,17 @@ export default function RoutePage() {
   }, [slug])
 
   const handleLocationClick = (locationName: string) => {
-    console.log('🔍 Finding location:', locationName)
-    console.log('📦 All deliveries:', deliveryData)
-    
     const delivery = deliveryData.find((del) => 
       del.location.toLowerCase().includes(locationName.toLowerCase()) ||
       locationName.toLowerCase().includes(del.location.toLowerCase())
     )
     
-    console.log('✅ Found delivery:', delivery)
-    
     if (delivery) {
-      console.log('🗺️ Setting selected location:', { lat: delivery.lat, lng: delivery.lng })
       setSelectedLocation(delivery)
       // Auto-open map if it's hidden
       if (!showMap) {
-        console.log('🎬 Opening map...')
         setShowMap(true)
       }
-    } else {
-      console.log('❌ Delivery not found for:', locationName)
     }
   }
 
@@ -152,8 +142,7 @@ export default function RoutePage() {
         return await response.json()
       }
       return { hasDuplicate: false, duplicates: [] }
-    } catch (error) {
-      console.error('Error checking duplicate:', error)
+    } catch (_error) {
       return { hasDuplicate: false, duplicates: [] }
     }
   }
@@ -199,8 +188,7 @@ export default function RoutePage() {
         setEditModalOpen(false)
         setEditingRow(null)
         setCodeError('')
-      } catch (error) {
-        console.error('Error updating location:', error)
+      } catch (_error) {
         setCodeError('Failed to save changes. Please try again.')
       }
     }
@@ -214,9 +202,8 @@ export default function RoutePage() {
       })
 
       setDeliveryData((prev) => prev.filter((del) => del.id !== rowId))
-    } catch (error) {
-      console.error('Error deleting location:', error)
-      throw error
+    } catch (err) {
+      throw err
     }
   }
 
@@ -258,8 +245,8 @@ export default function RoutePage() {
         const data = await response.json()
         setDeliveryData(data.sort((a: Delivery, b: Delivery) => a.code - b.code))
       }
-    } catch (error) {
-      console.error('Error refreshing locations:', error)
+    } catch (_error) {
+      // Silently fail
     }
   }
 
